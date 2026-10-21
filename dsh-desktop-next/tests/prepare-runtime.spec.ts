@@ -1,8 +1,10 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, expect, it } from 'vitest'
-import { expectedNextVersion, nextRuntimeBuildPaths, nextRuntimeTargets, officeSkillsDirectory, primaryRuntimeDirectory, verifyNextRuntimeTree, type NextRuntimeArch } from '../scripts/prepare-runtime.ts'
+import { primaryRuntimePayloadDigest, readPrimaryRuntimeLock } from '../scripts/primary-runtime.ts'
+import { expectedNextVersion, nextRuntimeBuildPaths, nextRuntimeTargets, officeSkillsDirectory, primaryRuntimeDirectory, reusableNextRuntimeTree, verifyNextRuntimeTree, type NextRuntimeArch } from '../scripts/prepare-runtime.ts'
 
 const roots: string[] = []
 afterEach(() => { for (const path of roots.splice(0)) rmSync(path, { recursive: true, force: true }) })
@@ -116,4 +118,19 @@ it('rejects missing entry points and Office resources', () => {
   const skill = fixture()
   writePayload(skill, 'arm64', { omit: ['office-skills/office-xlsx/SKILL.md'] })
   expect(() => verifyNextRuntimeTree(skill, 'darwin', '2.0.0-next')).toThrow('missing arm64 office-xlsx skill')
+})
+
+it('reuses a runtime tree only when every target matches the current lock digest and version', () => {
+  const lock = readPrimaryRuntimeLock()
+  const pnpmVersion = (JSON.parse(readFileSync(createRequire(import.meta.url).resolve('pnpm'), 'utf8')) as { version: string }).version
+  const root = fixture()
+  writePayload(root, 'arm64', { manifest: { payloadDigest: primaryRuntimePayloadDigest('mac-arm64', lock, pnpmVersion) } })
+  writePayload(root, 'x64', { manifest: { payloadDigest: primaryRuntimePayloadDigest('mac-x64', lock, pnpmVersion) } })
+  expect(reusableNextRuntimeTree(root, 'darwin', '2.0.0-next')).toHaveLength(2)
+  expect(reusableNextRuntimeTree(root, 'darwin', '2.0.1-next')).toEqual([])
+  mkdirSync(join(root, 'stale'))
+  expect(reusableNextRuntimeTree(root, 'darwin', '2.0.0-next')).toEqual([])
+  rmSync(join(root, 'stale'), { recursive: true, force: true })
+  writePayload(root, 'x64', { manifest: { payloadDigest: '0'.repeat(64) } })
+  expect(reusableNextRuntimeTree(root, 'darwin', '2.0.0-next')).toEqual([])
 })

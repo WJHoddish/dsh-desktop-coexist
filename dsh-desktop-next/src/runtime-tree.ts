@@ -1,7 +1,7 @@
 /** Relocatable, integrity-recorded production payload carried by one Next release. */
 
 import { createHash } from 'node:crypto'
-import { lstatSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { closeSync, lstatSync, openSync, readdirSync, readFileSync, readSync, writeFileSync } from 'node:fs'
 import { isAbsolute, join, relative, sep } from 'node:path'
 
 /** Descriptor sealed at the payload root; a packaged application carries it inside `app.asar`. */
@@ -61,6 +61,8 @@ export interface PayloadEntry {
   readonly executable: boolean
   /** Final bytes. */
   read(): Buffer
+  /** Read at most the leading `bytes` of the entry without loading the entire file. */
+  readHeader?(bytes: number): Buffer
 }
 
 /** A complete payload: an unpacked directory, or an archive with its unpacked sibling. */
@@ -140,7 +142,16 @@ export function physicalPayload(root: string, omit: readonly string[] = [DESKTOP
         entries.set(name, { path: name, unpacked: false,
           // Windows has no portable Unix executable permission bits.
           executable: process.platform !== 'win32' && (lstatSync(path).mode & 0o111) !== 0,
-          read: () => readFileSync(path) })
+          read: () => readFileSync(path),
+          readHeader: (bytes) => {
+            const fd = openSync(path, 'r')
+            try {
+              const buffer = Buffer.alloc(bytes)
+              return buffer.subarray(0, readSync(fd, buffer, 0, bytes, 0))
+            } finally {
+              closeSync(fd)
+            }
+          } })
       } else throw new Error(`desktop runtime: unsupported filesystem entry ${name}`)
     }
   }

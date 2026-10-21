@@ -1,10 +1,10 @@
 /** Prepare, execute and check the bundled interpreter payloads for every CPU one Next package carries. */
-import { existsSync, readFileSync, rmSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parsePrimaryRuntime, workspaceDependencyPaths, type PrimaryRuntimeManifest } from '@deepseek-ai/dsh-tool-workspace-dependencies'
-import { machOArchitectures, preparePrimaryRuntime, readPrimaryRuntimeLock, rosettaAvailable, smokePrimaryRuntime, type PrimaryRuntimeTarget } from './primary-runtime.ts'
+import { machOArchitectures, preparePrimaryRuntime, primaryRuntimePayloadDigest, readPrimaryRuntimeLock, rosettaAvailable, smokePrimaryRuntime, type PrimaryRuntimeTarget } from './primary-runtime.ts'
 
 /** CPU of one bundled payload. */
 export type NextRuntimeArch = 'arm64' | 'x64'
@@ -100,10 +100,12 @@ export async function prepareNextRuntime(options: PrepareNextRuntimeOptions): Pr
   }
   const lock = readPrimaryRuntimeLock()
   const skillSource = join(dirname(createRequire(import.meta.url).resolve('@deepseek-ai/dsh-skill-office/package.json')), 'assets')
-  for (const { target, arch } of targets) {
+  for (const { target } of targets) {
     log(`Preparing the ${target} primary runtime (Python ${lock.pythonVersion}, Node ${lock.nodeVersion}) for ${options.version}`)
-    await preparePrimaryRuntime({ lock, target, output: join(paths.runtime, arch), cache: paths.downloads, version: options.version, skillSource })
   }
+  await Promise.all(targets.map(({ target, arch }) =>
+    preparePrimaryRuntime({ lock, target, output: join(paths.runtime, arch), cache: paths.downloads, version: options.version, skillSource }),
+  ))
   return paths.runtime
 }
 
@@ -181,11 +183,52 @@ export function verifyNextRuntimeTree(runtimeRoot: string, platform: NodeJS.Plat
   return verified
 }
 
+/**
+ * Check whether an existing runtime root already matches the locked payload digests and product
+ * version for every target of the platform without stale entries.
+ * @param runtimeRoot - `.desktop-build/runtime`.
+ * @param platform - Platform the package targets.
+ * @param expectedVersion - Product version every manifest must record.
+ * @param hostArch - Build host architecture, used on Linux where packages are single-architecture.
+ * @returns The verified payloads when the existing tree can be reused, or an empty array.
+ */
+export function reusableNextRuntimeTree(
+  runtimeRoot: string,
+  platform: NodeJS.Platform,
+  expectedVersion: string,
+  hostArch: string = process.arch,
+): VerifiedNextRuntime[] {
+  const targets = nextRuntimeTargets(platform, hostArch)
+  if (targets.length === 0 || !existsSync(runtimeRoot)) return []
+  try {
+    const verified = verifyNextRuntimeTree(runtimeRoot, platform, expectedVersion, hostArch)
+    const expectedArchs = new Set<string>(targets.map(item => item.arch))
+    if (readdirSync(runtimeRoot).some(entry => !expectedArchs.has(entry))) return []
+    const lock = readPrimaryRuntimeLock()
+    const pnpmManifest = createRequire(import.meta.url).resolve('pnpm')
+    const pnpmVersion = (JSON.parse(readFileSync(pnpmManifest, 'utf8')) as { version: string }).version
+    for (let index = 0; index < targets.length; index++) {
+      const target = targets[index]!
+      const runtime = verified[index]
+      if (runtime?.manifest.payloadDigest !== primaryRuntimePayloadDigest(target.target, lock, pnpmVersion)) return []
+    }
+    return verified
+  } catch {
+    return []
+  }
+}
+
 const invokedPath = process.argv[1]
 if (invokedPath !== undefined && resolve(invokedPath) === fileURLToPath(import.meta.url)) {
   const desktopRoot = resolve(import.meta.dirname, '..')
   const version = expectedNextVersion(desktopRoot)
-  const root = await prepareNextRuntime({ desktopRoot, platform: process.platform, version })
-  verifyNextRuntimeTree(root, process.platform, version)
-  smokeNextRuntime(root, process.platform)
+  const paths = nextRuntimeBuildPaths(desktopRoot)
+  const reusable = reusableNextRuntimeTree(paths.runtime, process.platform, version)
+  if (reusable.length > 0) {
+    console.log(`Reusing prepared primary runtime for ${reusable.map(item => item.arch).join(', ')}`)
+  } else {
+    const root = await prepareNextRuntime({ desktopRoot, platform: process.platform, version })
+    verifyNextRuntimeTree(root, process.platform, version)
+    smokeNextRuntime(root, process.platform)
+  }
 }

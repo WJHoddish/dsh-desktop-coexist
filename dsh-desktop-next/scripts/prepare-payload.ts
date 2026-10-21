@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import { nextRuntimeFileExclusion, type NextPackagingTarget } from './runtime-file-policy.ts'
 import { nextPackagingTarget, nextPayloadRelease, PAYLOAD_DIR, verifyNextPayload } from './packaged-payload.ts'
-import { DESKTOP_RUNTIME_FILE, physicalPayload, sealPayload, verifyPayload, type DesktopRuntimeDescriptor } from '../src/runtime-tree.ts'
+import { DESKTOP_RUNTIME_FILE, physicalPayload, sealPayload, type DesktopRuntimeDescriptor } from '../src/runtime-tree.ts'
 
 /** Shell entries copied beside the dependency tree; `package.json` is written separately. */
 const SHELL_ENTRIES = ['lib', 'assets', 'build/app-icon.ico', 'build/app-icon.png', 'build/app-icon-mac.png',
@@ -236,19 +236,20 @@ export async function preparePayload(options: PreparePayloadOptions): Promise<De
   for (const pkg of closure) copyPackage(pkg, modules, target)
   log(`Materialized ${String(closure.length)} packages for ${target.platform} ${target.archs.join('/')}`)
   const transform = createTransformer(output, {}, undefined)
+  const manifestPaths: string[] = []
   for (const entry of readdirSync(modules, { recursive: true, withFileTypes: true })) {
-    if (!entry.isFile() || entry.name !== 'package.json') continue
-    const path = join(entry.parentPath, entry.name)
+    if (entry.isFile() && entry.name === 'package.json') manifestPaths.push(join(entry.parentPath, entry.name))
+  }
+  await Promise.all(manifestPaths.map(async (path) => {
     const transformed = await transform(path)
     if (transformed != null) writeFileSync(path, transformed)
-  }
+  }))
   const source = physicalPayload(output)
   verifyNextPayload(source)
   const release = nextPayloadRelease(source, options.electronVersion)
   const manifest = readManifest(output)
   const file = join(output, DESKTOP_RUNTIME_FILE)
-  sealPayload(source, file, release, Object.keys(manifest.dependencies ?? {}), target)
-  const descriptor = verifyPayload(physicalPayload(output), file, release.version, target)
+  const descriptor = sealPayload(source, file, release, Object.keys(manifest.dependencies ?? {}), target)
   log(`Sealed the prepared payload: ${String(descriptor.files.length)} files; DSH NEXT ${release.version}, dsh ${release.dshVersion}, Electron ${release.electronVersion}, pnpm ${release.pnpmVersion}`)
   return descriptor
 }

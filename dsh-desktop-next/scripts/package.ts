@@ -11,7 +11,7 @@ import { packageMacSmoke } from '../../dsh-plugin-desktop-beta/scripts/package-m
 import { createWindowsPackageOptions, packageWindowsInstaller } from '../../dsh-plugin-desktop-beta/scripts/package-win.ts'
 import { prepareNextMacRuntime } from './mac-runtime.ts'
 import { runNextPackagingCommand } from './packaging-command.ts'
-import { expectedNextVersion, nextRuntimeBuildPaths, nextRuntimeTargets, prepareNextRuntime, primaryRuntimeDirectory, smokeNextRuntime, verifyNextRuntimeTree } from './prepare-runtime.ts'
+import { expectedNextVersion, nextRuntimeBuildPaths, nextRuntimeTargets, prepareNextRuntime, primaryRuntimeDirectory, reusableNextRuntimeTree, smokeNextRuntime, verifyNextRuntimeTree } from './prepare-runtime.ts'
 import { signMacRuntime, withMacSigningIdentity } from './sign-runtime.ts'
 
 const desktopRoot = fileURLToPath(new URL('..', import.meta.url))
@@ -55,15 +55,27 @@ const listCodeSigningIdentities = (env: NodeJS.ProcessEnv): string => {
   return result.stdout
 }
 
+let interpretersVerified = false
+
 /**
  * Prepare every interpreter payload the platform ships, sign them when a release identity is given,
  * then check and execute the final bytes. electron-builder copies the tree as extra resources.
  */
 async function prepareInterpreters(sign?: (runtimeRoot: string) => Promise<void>): Promise<void> {
-  const root = await prepareNextRuntime({ desktopRoot, platform: process.platform, version: buildVersion })
+  const paths = nextRuntimeBuildPaths(desktopRoot)
+  const reusable = reusableNextRuntimeTree(paths.runtime, process.platform, buildVersion)
+  if (reusable.length > 0 && sign === undefined) {
+    console.log(`Reusing prepared primary runtime for ${reusable.map(item => item.arch).join(', ')}`)
+    interpretersVerified = true
+    return
+  }
+  const root = reusable.length > 0
+    ? paths.runtime
+    : await prepareNextRuntime({ desktopRoot, platform: process.platform, version: buildVersion })
   if (sign !== undefined) await sign(root)
   verifyNextRuntimeTree(root, process.platform, buildVersion)
   smokeNextRuntime(root, process.platform)
+  interpretersVerified = true
 }
 /**
  * Materialize and seal the payload electron-builder archives. A separate process keeps the
@@ -83,7 +95,9 @@ const preparePayload = (platform: NodeJS.Platform): void => {
  */
 const prepareRuntime = (platform: NodeJS.Platform = process.platform): void => {
   if (platform === 'darwin') prepareNextMacRuntime(desktopRoot)
-  verifyNextRuntimeTree(nextRuntimeBuildPaths(desktopRoot).runtime, platform, buildVersion)
+  if (!interpretersVerified || platform !== process.platform) {
+    verifyNextRuntimeTree(nextRuntimeBuildPaths(desktopRoot).runtime, platform, buildVersion)
+  }
   preparePayload(platform)
 }
 const mode = process.argv[2]

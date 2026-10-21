@@ -61,21 +61,33 @@ export function archivedPayload(resourcesDir: string): ArchivedPayload {
         const stat = lstatSync(physical, { throwIfNoEntry: false })
         if (stat === undefined || !stat.isFile()) throw new Error(`Next payload: unpacked entry ${path} has no physical file`)
         entries.set(path, { path, unpacked: true, executable: process.platform !== 'win32' && (stat.mode & 0o111) !== 0,
-          read: () => readFileSync(physical) })
+          read: () => readFileSync(physical),
+          readHeader: (bytes) => {
+            const unpackedFd = openSync(physical, 'r')
+            try {
+              const buffer = Buffer.alloc(bytes)
+              return buffer.subarray(0, readSync(unpackedFd, buffer, 0, bytes, 0))
+            } finally {
+              closeSync(unpackedFd)
+            }
+          } })
         continue
       }
       const { size } = node
       const offset = Number(node.offset)
-      entries.set(path, { path, unpacked: false, executable: node.executable === true, read: () => {
-        const buffer = Buffer.alloc(size)
+      const readSlice = (length: number): Buffer => {
+        const buffer = Buffer.alloc(length)
         let done = 0
-        while (done < size) {
-          const read = readSync(descriptor(), buffer, done, size - done, dataOffset + offset + done)
+        while (done < length) {
+          const read = readSync(descriptor(), buffer, done, length - done, dataOffset + offset + done)
           if (read === 0) throw new Error(`Next payload: truncated archive entry ${path}`)
           done += read
         }
         return buffer
-      } })
+      }
+      entries.set(path, { path, unpacked: false, executable: node.executable === true,
+        read: () => readSlice(size),
+        readHeader: bytes => readSlice(Math.min(bytes, size)) })
     }
   }
   visit(header, '')
@@ -196,7 +208,7 @@ export function auditNextPayload(source: PayloadSource, target: NextPackagingTar
     }
     if (entry.unpacked) continue
     if (REQUIRED_UNPACKED.some(pattern => pattern.test(entry.path))) problems.push(`${entry.path}: must be unpacked beside app.asar`)
-    else if (isNativeImage(entry.read().subarray(0, 4))) problems.push(`${entry.path}: native code is packed inside app.asar`)
+    else if (isNativeImage(entry.readHeader ? entry.readHeader(4) : entry.read().subarray(0, 4))) problems.push(`${entry.path}: native code is packed inside app.asar`)
   }
   return [...[...strayRoots].sort().map(root => `${root}: outside the declared application files`), ...problems]
 }

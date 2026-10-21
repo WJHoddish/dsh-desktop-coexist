@@ -32,8 +32,8 @@
     "dist:mac": "node scripts/package.ts mac",
     "dist:mac-smoke": "node scripts/package.ts mac-smoke",
     "dist:win": "node scripts/package.ts win",
-    "check:mac-package": "yarn check",
-    "check:win-package": "yarn check"
+    "check:mac-package": "yarn workspace dsh-community-market build && yarn build && yarn verify:frontend",
+    "check:win-package": "yarn workspace dsh-community-market build && yarn build && yarn verify:frontend"
   },
   "dependencies": {
     "@agents-anywhere/dsh-bridge-next": "file:../vendor/agents-anywhere/agents-anywhere-dsh-bridge-next-2.1.0-desktop.c43434415e1d6.r2e406d2a.tgz",
