@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { basename as posixBasename, dirname as posixDirname } from 'node:path/posix'
 import { getRawHeader } from '@electron/asar'
-import { nextRuntimeFileExclusion, type NextPackagingTarget } from './runtime-file-policy.ts'
+import { nextRuntimeFileExclusion, nextRuntimePackageExclusion, type NextPackagingTarget, type RuntimePackageConstraints } from './runtime-file-policy.ts'
 import { DESKTOP_RUNTIME_FILE, parseDesktopRuntime, verifyPayload, type DesktopRuntimeDescriptor, type DesktopRuntimeFile, type NextRelease, type PayloadEntry, type PayloadSource, type VerifyPayloadOptions } from '../src/runtime-tree.ts'
 
 /** Application-relative directory holding the prepared payload that Electron Builder archives verbatim. */
@@ -205,6 +205,16 @@ export function auditNextPayload(source: PayloadSource, target: NextPackagingTar
     if (entry.path.startsWith('node_modules/')) {
       const reason = nextRuntimeFileExclusion(entry.path.slice('node_modules/'.length), target)
       if (reason !== undefined) problems.push(`${entry.path}: ${reason} must not be packaged`)
+      if (entry.path.endsWith('/package.json')) {
+        const parts = entry.path.split('/')
+        const packageParts = parts.slice(parts.lastIndexOf('node_modules') + 1)
+        const nameParts = packageParts[0]?.startsWith('@') ? 2 : 1
+        if (packageParts.length === nameParts + 1) {
+          const manifest = JSON.parse(entry.read().toString('utf8')) as RuntimePackageConstraints
+          const packageReason = nextRuntimePackageExclusion(manifest, target)
+          if (packageReason !== undefined) problems.push(`${entry.path}: ${packageReason} must not be packaged`)
+        }
+      }
     }
     if (entry.unpacked) continue
     if (REQUIRED_UNPACKED.some(pattern => pattern.test(entry.path))) problems.push(`${entry.path}: must be unpacked beside app.asar`)

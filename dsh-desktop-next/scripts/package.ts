@@ -13,6 +13,7 @@ import { prepareNextMacRuntime } from './mac-runtime.ts'
 import { runNextPackagingCommand } from './packaging-command.ts'
 import { expectedNextVersion, nextRuntimeBuildPaths, nextRuntimeTargets, prepareNextRuntime, primaryRuntimeDirectory, reusableNextRuntimeTree, smokeNextRuntime, verifyNextRuntimeTree } from './prepare-runtime.ts'
 import { signMacRuntime, withMacSigningIdentity } from './sign-runtime.ts'
+import { packagingStep, packagingStepSync } from './packaging-step.ts'
 
 const desktopRoot = fileURLToPath(new URL('..', import.meta.url))
 const workspaceRoot = resolve(desktopRoot, '..')
@@ -47,7 +48,13 @@ const run = (command: string, args: readonly string[], cwd: string, env: NodeJS.
     ? [...withoutRebuildFlag, `--config.extraMetadata.version=${TEST_BUILD_VERSION}`, `--config.buildVersion=${TEST_BUILD_VERSION}`]
     : withoutRebuildFlag
   if (TEST_BUILD_VERSION !== undefined && isBuilder) console.log(`Packaging with test build version ${TEST_BUILD_VERSION}; source manifests are unchanged.`)
-  runNextPackagingCommand(command, forwarded, cwd, env, workspaceRoot)
+  const isPreflight = (args.includes('run') && args.includes('check')) || args.some(arg => arg.includes('check:win-package'))
+  const stage = isBuilder ? 'builder:total' : isPreflight ? 'build:package-preflight' : 'package:command'
+  const measuredArgs = isBuilder && env.DSH_DESKTOP_PACKAGING_RUN_DIR !== undefined
+    ? ['--import', new URL('./packaging-builder.mjs', import.meta.url).href, ...forwarded]
+    : forwarded
+  const builderEnv = isBuilder ? { ...env, DSH_NEXT_WINDOWS_FAST_COMPRESSION: '1' } : env
+  packagingStepSync(stage, () => runNextPackagingCommand(command, measuredArgs, cwd, builderEnv, workspaceRoot))
 }
 const listCodeSigningIdentities = (env: NodeJS.ProcessEnv): string => {
   const result = spawnSync('security', ['find-identity', '-v', '-p', 'codesigning'], { env, encoding: 'utf8' })
@@ -63,7 +70,7 @@ let interpretersVerified = false
  */
 async function prepareInterpreters(sign?: (runtimeRoot: string) => Promise<void>): Promise<void> {
   const paths = nextRuntimeBuildPaths(desktopRoot)
-  const reusable = reusableNextRuntimeTree(paths.runtime, process.platform, buildVersion)
+  const reusable = packagingStepSync('runtime:check-reuse', () => reusableNextRuntimeTree(paths.runtime, process.platform, buildVersion))
   if (reusable.length > 0 && sign === undefined) {
     console.log(`Reusing prepared primary runtime for ${reusable.map(item => item.arch).join(', ')}`)
     interpretersVerified = true
@@ -71,10 +78,10 @@ async function prepareInterpreters(sign?: (runtimeRoot: string) => Promise<void>
   }
   const root = reusable.length > 0
     ? paths.runtime
-    : await prepareNextRuntime({ desktopRoot, platform: process.platform, version: buildVersion })
+    : await packagingStep('runtime:prepare-primary', () => prepareNextRuntime({ desktopRoot, platform: process.platform, version: buildVersion }))
   if (sign !== undefined) await sign(root)
-  verifyNextRuntimeTree(root, process.platform, buildVersion)
-  smokeNextRuntime(root, process.platform)
+  packagingStepSync('runtime:verify-primary', () => verifyNextRuntimeTree(root, process.platform, buildVersion))
+  packagingStepSync('runtime:smoke-primary', () => smokeNextRuntime(root, process.platform))
   interpretersVerified = true
 }
 /**
@@ -82,12 +89,12 @@ async function prepareInterpreters(sign?: (runtimeRoot: string) => Promise<void>
  * manifest transformer it borrows from electron-builder out of this entry point.
  * @param platform - Platform being packaged.
  */
-const preparePayload = (platform: NodeJS.Platform): void => {
+const preparePayload = (platform: NodeJS.Platform): void => packagingStepSync('payload:total', () => {
   const result = spawnSync(process.execPath, [join(desktopRoot, 'scripts', 'prepare-payload.ts'), '--platform', platform,
     ...(TEST_BUILD_VERSION === undefined ? [] : ['--version', TEST_BUILD_VERSION])], { cwd: desktopRoot, env: process.env, stdio: 'inherit' })
   if (result.error) throw result.error
   if (result.status !== 0) throw new Error(`Next payload preparation exited with ${String(result.status)}`)
-}
+})
 /**
  * The shared flows call this right before electron-builder: the interpreter payloads were prepared
  * before they started and must still verify, and the archive payload is prepared now.

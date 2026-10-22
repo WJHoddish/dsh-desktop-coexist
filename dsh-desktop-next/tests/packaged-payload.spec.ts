@@ -124,6 +124,22 @@ it('rejects an archive missing a declared dependency or a shell-owned file', asy
   try { expect(() => verifyNextPayload(missing)).toThrow(/Missing Next payload: host\.cordis\.patch\.yml/u) } finally { missing.close() }
 })
 
+it('rejects incompatible native package manifests even inside a nested archived dependency', async () => {
+  const { resources } = await assembled((app) => {
+    writePackage(join(app, 'node_modules'), '@fixture/wrong-cpu', { os: [target.platform], cpu: ['mips'] })
+    writePackage(join(app, 'node_modules', 'native-pkg', 'node_modules'), '@fixture/wrong-os', { os: ['unsupported-platform'] })
+    mkdirSync(join(app, 'node_modules', 'native-pkg', 'assets'))
+    writeFileSync(join(app, 'node_modules', 'native-pkg', 'assets', 'package.json'), '{"cpu":["mips"]}')
+  })
+  const source = archivedPayload(resources)
+  try {
+    expect(auditNextPayload(source, target)).toEqual([
+      'node_modules/@fixture/wrong-cpu/package.json: package CPU does not match target must not be packaged',
+      'node_modules/native-pkg/node_modules/@fixture/wrong-os/package.json: package OS does not match target must not be packaged',
+    ])
+  } finally { source.close() }
+})
+
 it('cross-checks the archive against the prepared descriptor, then the final application against the embedded copy', async () => {
   const { resources, app } = await assembled()
   const prepared = join(app, DESKTOP_RUNTIME_FILE)

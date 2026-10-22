@@ -9,11 +9,12 @@ import { withoutWindowsSigningSecrets } from '../../dsh-plugin-desktop-beta/scri
 import { archivedPayload, nextPackagingTarget, PAYLOAD_DIR, universalMergeRewrite, verifyNextRuntime, verifyUpdaterManifestShim } from './packaged-payload.ts'
 import { expectedNextVersion, verifyNextRuntimeTree } from './prepare-runtime.ts'
 import { verifiedPackagedResources } from './verify-packaged.ts'
+import { packagingStep } from './packaging-step.ts'
 
 const desktopRoot = fileURLToPath(new URL('..', import.meta.url))
 
 function runPackagedNode(path: string, args: readonly string[], timeout: number, failure: string): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return packagingStep(`smoke:${failure.replace(/ failed$/u, '')}`, () => new Promise<void>((resolve, reject) => {
     const child = spawn(path, args, {
       env: { ...withoutWindowsSigningSecrets(withoutMacReleaseSecrets(process.env)), ELECTRON_RUN_AS_NODE: '1' },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -47,10 +48,10 @@ function runPackagedNode(path: string, args: readonly string[], timeout: number,
       }
       resolve()
     })
-  })
+  }))
 }
 
-export default async function afterAllArtifactBuild(result: { outDir: string }): Promise<string[]> {
+async function verifyFinalArtifacts(result: { outDir: string }): Promise<string[]> {
   const paths = ['mac/DSH NEXT.app/Contents/MacOS/DSH NEXT', 'mac-arm64/DSH NEXT.app/Contents/MacOS/DSH NEXT',
     'mac-universal/DSH NEXT.app/Contents/MacOS/DSH NEXT', 'win-unpacked/DSH NEXT.exe', 'linux-unpacked/dsh-desktop-next']
   const executables = paths.map(path => join(result.outDir, path)).filter(existsSync)
@@ -102,4 +103,8 @@ export default async function afterAllArtifactBuild(result: { outDir: string }):
     ])
   }
   return []
+}
+
+export default async function afterAllArtifactBuild(result: { outDir: string }): Promise<string[]> {
+  return packagingStep('verify:final-artifacts', () => verifyFinalArtifacts(result))
 }
