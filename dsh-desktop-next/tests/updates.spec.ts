@@ -1,12 +1,20 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, expect, it, vi } from 'vitest'
+import { NextUpdateSettings } from '../src/client/updates.tsx'
+import { DEFAULT_PREFERENCES, type DesktopState } from '../src/desktop-contract.ts'
 import { NextUpdates, type NextUpdateOptions } from '../src/updates.ts'
 import { serveMacUpdate } from '../src/mac-update-feed.ts'
 import { updateAction, updateLabel } from '../src/update-state.ts'
 import type { UpdateRequest } from '../../dsh-plugin-desktop-beta/src/update-checker.ts'
 import type { UpdateArtifactRequest } from '../../dsh-plugin-desktop-beta/src/update-download.ts'
+
+vi.mock('@deepseek-ai/dsh-client-ui-primitives', () => ({
+  Button: ({ children, ...props }: Record<string, unknown>) => createElement('button', props, children as never),
+}))
 
 const roots: string[] = []
 const owners: NextUpdates[] = []
@@ -49,6 +57,13 @@ it('allows checks in development, but never downloads or replaces the developmen
   await updates.check(); await updates.download()
   expect(updates.snapshot()).toMatchObject({ installable: false, error: 'development' })
   expect(request).toHaveBeenCalledOnce(); expect(options.prepare).not.toHaveBeenCalled()
+})
+it('does not start background update polling on Linux', async () => {
+  vi.useFakeTimers()
+  const { updates, request } = await fixture({ platform: 'linux', packaged: true })
+  updates.start()
+  await vi.advanceTimersByTimeAsync(60_000)
+  expect(request).not.toHaveBeenCalled()
 })
 it('rechecks the selected version before downloading, and preserves preparation failures for retry', async () => {
   const { updates, options } = await fixture({ prepare: async () => { throw new Error('Signature mismatch') } })
@@ -122,4 +137,28 @@ it('notifies once per newly discovered background update version and persists no
   await restarted.check(true)
   expect(secondAvailable).toHaveBeenCalledTimes(1)
   expect(secondAvailable).toHaveBeenCalledWith('2.0.20-next.1')
+})
+it('renders only the version on Linux while showing update status and controls on macOS and Windows', () => {
+  const baseState: DesktopState = {
+    selected: 'desktop', profiles: ['desktop'], unavailableProfiles: [],
+    features: { market: false, remoteControl: false }, preferences: { ...DEFAULT_PREFERENCES },
+    phase: 'ready', busy: false, failure: '', safeMode: false, home: '/fixture',
+    platform: 'linux', version: '2.0.19-next', trayAvailable: true, notificationsAvailable: true,
+    browserUrl: null, lan: null, checkpoint: null, logs: '',
+    updates: { phase: 'idle', installable: false },
+  }
+  const linuxHtml = renderToStaticMarkup(createElement(NextUpdateSettings, { state: baseState, language: 'zh-CN', run: vi.fn() }))
+  expect(linuxHtml).toContain('桌面版本')
+  expect(linuxHtml).not.toContain('应用更新')
+  expect(linuxHtml).toContain('DSH NEXT · 2.0.19-next')
+  expect(linuxHtml).not.toContain('检查更新')
+  expect(linuxHtml).not.toContain('应用内安装更新需要使用 macOS 或 Windows 安装版。')
+  expect(linuxHtml).not.toContain('<button')
+
+  const macHtml = renderToStaticMarkup(createElement(NextUpdateSettings, { state: { ...baseState, platform: 'darwin' }, language: 'zh-CN', run: vi.fn() }))
+  expect(macHtml).toContain('应用更新')
+  expect(macHtml).toContain('DSH NEXT · 2.0.19-next')
+  expect(macHtml).toContain('检查更新')
+  expect(macHtml).toContain('应用内安装更新需要使用 macOS 或 Windows 安装版。')
+  expect(macHtml).toContain('<button')
 })

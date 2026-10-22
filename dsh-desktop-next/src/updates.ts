@@ -66,7 +66,7 @@ export class NextUpdates {
     this.options.changed()
   }
   start(): void {
-    if (!this.options.packaged || this.timer || this.disposed) return
+    if (!this.options.packaged || !['darwin', 'win32'].includes(this.options.platform) || this.timer || this.disposed) return
     void this.initializeCache().catch(this.options.log)
     const poll = (): void => {
       if (this.disposed) return

@@ -1829,6 +1829,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@deepseek-ai/dsh-client-ui-conversation@patch:@deepseek-ai/dsh-client-ui-conversation@file%3Avendor/dsh-runtime/0.2.1-rc.2/deepseek-ai-dsh-client-ui-conversation-0.2.1-rc.2.tgz#./patches/dsh-client-ui-conversation@0.2.1-rc.2.patch::locator=deepseek-harness-desktop%40workspace%3A.":
+  version: 0.2.1-rc.2
+  resolution: "@deepseek-ai/dsh-client-ui-conversation@patch:@deepseek-ai/dsh-client-ui-conversation@file%3Avendor/dsh-runtime/0.2.1-rc.2/deepseek-ai-dsh-client-ui-conversation-0.2.1-rc.2.tgz%23vendor/dsh-runtime/0.2.1-rc.2/deepseek-ai-dsh-client-ui-conversation-0.2.1-rc.2.tgz%3A%3Ahash=04608e&locator=deepseek-harness-desktop%2540workspace%253A.#./patches/dsh-client-ui-conversation@0.2.1-rc.2.patch::version=0.2.1-rc.2&hash=3d287c&locator=deepseek-harness-desktop%40workspace%3A."
+  dependencies:
+    "@deepseek-ai/schemastery": "npm:~3.18.5"
+  peerDependencies:
+    "@deepseek-ai/cordis": ~4.0.5
+  checksum: 10c0/82de9d33722a5dadea792dc8a3804da4e58abcb3e19067c76d31608e334e510b84b8706e769c54d3cd8829f9c802a280423b714d1a4e4392ad98ae1c43f8a160
+  languageName: node
+  linkType: hard
+
 "@deepseek-ai/dsh-client-ui-cordis@file:vendor/dsh-runtime/0.2.1-rc.2/deepseek-ai-dsh-client-ui-cordis-0.2.1-rc.2.tgz::locator=deepseek-harness-desktop%40workspace%3A.":
   version: 0.2.1-rc.2
   resolution: "@deepseek-ai/dsh-client-ui-cordis@file:vendor/dsh-runtime/0.2.1-rc.2/deepseek-ai-dsh-client-ui-cordis-0.2.1-rc.2.tgz#vendor/dsh-runtime/0.2.1-rc.2/deepseek-ai-dsh-client-ui-cordis-0.2.1-rc.2.tgz::hash=d770ba&locator=deepseek-harness-desktop%40workspace%3A."
@@ -3047,6 +3058,20 @@ __metadata:
     "@deepseek-ai/cordis": ~4.0.5
     "@deepseek-ai/dsh-fs": 0.2.1-rc.2
   checksum: 10c0/2857c3844c053a56d3cc1709f600727acc16b1ad9988696bbe1c83ba2e0e4cedd148714aac4d9bd11eb6bc40a51ad1b8e5c4ee284ba807e4f0c9ba4f98380d3f
+  languageName: node
+  linkType: hard
+
+"@deepseek-ai/dsh-fs-local@patch:@deepseek-ai/dsh-fs-local@file%3Avendor/dsh-runtime/0.2.1-rc.2/deepseek-ai-dsh-fs-local-0.2.1-rc.2.tgz#./patches/dsh-fs-local@0.2.1-rc.2.patch::locator=deepseek-harness-desktop%40workspace%3A.":
+  version: 0.2.1-rc.2
+  resolution: "@deepseek-ai/dsh-fs-local@patch:@deepseek-ai/dsh-fs-local@file%3Avendor/dsh-runtime/0.2.1-rc.2/deepseek-ai-dsh-fs-local-0.2.1-rc.2.tgz%23vendor/dsh-runtime/0.2.1-rc.2/deepseek-ai-dsh-fs-local-0.2.1-rc.2.tgz%3A%3Ahash=2608db&locator=deepseek-harness-desktop%2540workspace%253A.#./patches/dsh-fs-local@0.2.1-rc.2.patch::version=0.2.1-rc.2&hash=ec5a05&locator=deepseek-harness-desktop%40workspace%3A."
+  dependencies:
+    "@deepseek-ai/schemastery": "npm:~3.18.5"
+    chokidar: "npm:5.0.0"
+    koffi: "npm:3.1.1"
+  peerDependencies:
+    "@deepseek-ai/cordis": ~4.0.5
+    "@deepseek-ai/dsh-fs": 0.2.1-rc.2
+  checksum: 10c0/165833803cf35bc81c7cfcddfcd14a68015830dfd510c9fb79fff0c4fccd8ad9ef7c7ec0d88cef188a58c1f1aa24ae94ce8e5592b44bca552cc0ffd5f8e9114a
   languageName: node
   linkType: hard
 
@@ -6389,13 +6414,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@earendil-works/pi-ai@npm:^1.1.0":
-  version: 1.2.0
-  resolution: "@earendil-works/pi-ai@npm:1.2.0"
+"@earendil-works/pi-ai@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@earendil-works/pi-ai@npm:1.1.0"
   dependencies:
     "@anthropic-ai/sdk": "npm:0.129.0"
     "@aws-sdk/client-bedrock-runtime": "npm:3.1127.0"
-    "@earendil-works/pi-telemetry": "npm:^1.2.0"
+    "@earendil-works/pi-telemetry": "npm:^1.1.0"
     "@google/genai": "npm:2.21.0"
     "@smithy/node-http-handler": "npm:4.12.1"
     http-proxy-agent: "npm:9.1.0"
@@ -6405,14 +6430,34 @@ __metadata:
     typebox: "npm:1.3.27"
   bin:
     pi-ai: dist/cli.js
-  checksum: 10c0/d12f8f94c4af9728d5d581e065a66fbacbdda4f205d0485f50d689eee243c67aa2a74f88fa199498a03204bcb547ad672af27ec2d9a100e2217c79b5393a6065
+  checksum: 10c0/04047f267ba355685568b1c4eb9fa92d4e9f95e1a466239f2015c3a1dc2abfe729fb21f3700c61fb9d1454cbe59a856a10988ddfd875c6be7db634b737a54f29
   languageName: node
   linkType: hard
 
-"@earendil-works/pi-telemetry@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@earendil-works/pi-telemetry@npm:1.2.0"
-  checksum: 10c0/6d6f7816d5ecebdc575550238678e090219945bbed058768466112543b5acd5cc3da72e34b6f900ce9ad8f74df8554ff265cf057b7b690fbbd9c205af4eab719
+"@earendil-works/pi-ai@patch:@earendil-works/pi-ai@npm%3A1.1.0#./patches/pi-ai@1.1.0.patch::locator=deepseek-harness-desktop%40workspace%3A.":
+  version: 1.1.0
+  resolution: "@earendil-works/pi-ai@patch:@earendil-works/pi-ai@npm%3A1.1.0#./patches/pi-ai@1.1.0.patch::version=1.1.0&hash=c57289&locator=deepseek-harness-desktop%40workspace%3A."
+  dependencies:
+    "@anthropic-ai/sdk": "npm:0.129.0"
+    "@aws-sdk/client-bedrock-runtime": "npm:3.1127.0"
+    "@earendil-works/pi-telemetry": "npm:^1.1.0"
+    "@google/genai": "npm:2.21.0"
+    "@smithy/node-http-handler": "npm:4.12.1"
+    http-proxy-agent: "npm:9.1.0"
+    https-proxy-agent: "npm:9.1.0"
+    openai: "npm:7.19.0"
+    partial-json: "npm:0.1.7"
+    typebox: "npm:1.3.27"
+  bin:
+    pi-ai: dist/cli.js
+  checksum: 10c0/c5253ac2b4cf98df4e50a6c43ceed85f0962e26ab6f0782c6193e4259906311c2c45432f1ea43faebf66cdd76cb69df7739c315a93b9432ea976c8c30ed5bf77
+  languageName: node
+  linkType: hard
+
+"@earendil-works/pi-telemetry@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@earendil-works/pi-telemetry@npm:1.1.0"
+  checksum: 10c0/207af46760cf06c4b307bc144f0c9b9435ee07571817925b7c06f57625c28cf14c2dae92798241623acc5688a8707399b1f69b08cd5bcc54c850d3d80ecf68e6
   languageName: node
   linkType: hard
 

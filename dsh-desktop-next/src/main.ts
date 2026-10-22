@@ -211,7 +211,8 @@ function state(): DesktopState {
     recovery = { bundles: [], checkpoints: [], profileDirectory: join(home, 'profiles', runtime.selected),
       usingDefaultDirectory: home === defaultHome, error: String(error), diagnosticsFile, notice: recoveryNotice }
   }
-  return { ...runtime.state(), recovery, onboarding, ...(onboarding ? { onboardingComputerUse } : {}), platform: process.platform, version, updates: updates.snapshot(),
+  return { ...runtime.state(), recovery, onboarding, ...(onboarding ? { onboardingComputerUse } : {}), platform: process.platform, version,
+    ...(['darwin', 'win32'].includes(process.platform) ? { updates: updates.snapshot() } : {}),
     trayAvailable: native.available, notificationsAvailable: Notification.isSupported() }
 }
 function run(value: DesktopCommand): void { void command(value, 'native').catch(error => runtime.report(error)) }
@@ -538,7 +539,7 @@ async function performCommand(input: Record<string, unknown>, type: string, sour
   if (type === 'close-controls') { shellWindow?.close(); return }
   if (type === 'quit') { app.quit(); return }
   if (['check-updates', 'download-update', 'install-update'].includes(type)) {
-    if (quitting || runtime.busy) return
+    if (!['darwin', 'win32'].includes(process.platform) || quitting || runtime.busy) return
     if (type === 'check-updates') {
       void updates.check().then(async () => {
         if (source !== 'native' || quitting) return
@@ -807,12 +808,6 @@ async function recoveryAction(input: Record<string, unknown>): Promise<void> {
     const bundle = runtime.recovery.bundles(runtime.selected).find(item => item.bundleId === input.id)
     if (!bundle || bundle.toggle !== (enable ? 'enable' : 'disable')
       || !/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/u.test(bundle.packageName)) throw new Error('This plugin cannot be changed')
-    if (!await confirmed(
-      enable ? t(`启用插件「${bundle.packageName}」？`, `Enable “${bundle.packageName}”?`)
-        : t(`禁用插件「${bundle.packageName}」？`, `Disable “${bundle.packageName}”?`),
-      enable ? t('下次启动时会重新加载此插件。', 'The plugin will load again on the next start.')
-        : t('不会删除任何内容：插件、版本声明和配置都会保留，只是下次启动时不再加载。随时可以重新启用。',
-          'Nothing is deleted: the plugin, its version declaration and its configuration all stay. It simply will not load on the next start, and you can enable it again at any time.'))) return
     await recoveryStopping
     if (!runtime.safeMode) await runtime.backend.stop()
     await runtime.recovery.setBundleSelected(runtime.selected, bundle.packageName, enable)
@@ -1133,8 +1128,7 @@ app.on('before-quit', event => {
   const timeout = setTimeout(() => {
     if (finish()) {
       runtime.diagnostics.record({ source: 'electron', event: 'shutdown.timeout', level: 'error', message: 'Shutdown exceeded five seconds', fields: { pending: JSON.stringify(runtime.diagnostics.pendingOperations()) } })
-      runtime.diagnostics.end(false)
-      app.exit(1)
+      void completeShutdown(false)
     }
   }, DESKTOP_SHUTDOWN_TIMEOUT_MS)
   timeout.unref()
@@ -1143,6 +1137,26 @@ app.on('before-quit', event => {
     finished = true
     clearTimeout(timeout)
     return true
+  }
+  async function completeShutdown(clean: boolean): Promise<void> {
+    if (installingUpdate) {
+      const installerDone = runtime.diagnostics.operation('electron', 'installer.launch')
+      try { await updateInstaller.launch(); installerDone() }
+      catch (error) {
+        installerDone(error)
+        runtime.diagnostics.record({ source: 'electron', event: 'installer.failed', level: 'error', error })
+        runtime.diagnostics.end(clean)
+        dialog.showErrorBox(t('更新未能安装', 'Update could not be installed'), t('应用将重新打开，请在设置中重试更新。', 'The application will reopen. Retry the update in Settings.'))
+        relaunchApp(app, relaunchArguments(process.argv.slice(1), false, false))
+        if (clean) app.quit()
+        else app.exit(1)
+        return
+      }
+    }
+    runtime.diagnostics.end(clean)
+    if (!clean) { app.exit(1); return }
+    if (relaunch) relaunchApp(app, relaunch)
+    app.quit()
   }
   // Keep disconnection/reconnection chrome out of the quit/relaunch transition.
   for (const window of [mainWindow, shellWindow]) {
@@ -1153,7 +1167,7 @@ app.on('before-quit', event => {
   const updatesDone = runtime.diagnostics.operation('electron', 'updates.dispose')
   const recoveryDone = runtime.diagnostics.operation('electron', 'recovery.dispose')
   void Promise.all([updates.dispose(installingUpdate).then(() => updatesDone(), error => { updatesDone(error); throw error }), (async () => { try { await recoveryRunner?.dispose(); recoveryDone() } catch (error) { recoveryDone(error); throw error }; await runtime.close() })()]).then(async () => {
-    if (finished) return
+    if (!finish()) return
     // A staged installer must survive until handoff; the next boot removes it.
     if (safeModeRequested && !installingUpdate) {
       // Windows may still hold Chromium files until process exit; a normal boot
@@ -1161,25 +1175,8 @@ app.on('before-quit', event => {
       try { cleanupDisposableTree(safeElectronData) }
       catch (error) { runtime.diagnostics.append(`Safe Mode desktop state cleanup failed: ${String(error)}`, 'warn'); runtime.diagnostics.flush() }
     }
-    if (installingUpdate) {
-      const installerDone = runtime.diagnostics.operation('electron', 'installer.launch')
-      try { await updateInstaller.launch(); installerDone() }
-      catch (error) {
-        installerDone(error)
-        if (!finish()) return
-        runtime.diagnostics.record({ source: 'electron', event: 'installer.failed', level: 'error', error })
-        runtime.diagnostics.end(true)
-        dialog.showErrorBox(t('更新未能安装', 'Update could not be installed'), t('应用将重新打开，请在设置中重试更新。', 'The application will reopen. Retry the update in Settings.'))
-        relaunchApp(app, relaunchArguments(process.argv.slice(1), false, false))
-        app.quit()
-        return
-      }
-    }
-    if (!finish()) return
-    runtime.diagnostics.end(true)
-    if (relaunch) relaunchApp(app, relaunch)
-    app.quit()
-  }).catch(error => { if (finish()) { runtime.diagnostics.record({ source: 'electron', event: 'shutdown.failed', level: 'error', error }); runtime.diagnostics.end(false); app.exit(1) } })
+    await completeShutdown(true)
+  }).catch(error => { if (finish()) { runtime.diagnostics.record({ source: 'electron', event: 'shutdown.failed', level: 'error', error }); void completeShutdown(false) } })
 })
 if (ownsInstance) {
   process.on('uncaughtExceptionMonitor', (error, origin) => {
