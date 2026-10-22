@@ -19,6 +19,7 @@ This repository owns the desktop product around an unmodified DeepSeek Harness c
 - Run the complete headless gate with `corepack yarn check`.
 - `corepack yarn dev:next` explicitly launches the experimental Next app; `corepack yarn check:next` validates it without a graphical application. Next uses the official published Web frontend and the recorded upstream Desktop presentation, with product capabilities composed as a separate bundle.
 - Develop and validate Desktop feature changes in `dsh-plugin-desktop-beta/` first, then synchronize shared changes into `dsh-plugin-desktop/` while preserving declared variant differences. Before committing or pushing shared Desktop changes, run `corepack yarn check:desktop-variants` and validate both affected packages; neither package automatically inherits the other's source edits.
+- Package the official (original) and Coexist editions of the Stable app in one run with `corepack yarn dist:win:editions`. Each edition is built after its identity is applied and `dist/` plus `lib/` are cleared, artifacts land in `dsh-plugin-desktop/release/<edition>/`, and the identity files are always restored afterwards. The run skips the in-tree package gate (`DSH_PACKAGE_CHECK_ALREADY_RAN=1`) because that gate asserts the committed Coexist identity; run `corepack yarn check` separately.
 - Run upstream operations through the root scripts, such as `corepack yarn upstream:build`.
 
 - `deepseek-harness/` is a pinned upstream Git submodule. Never edit files inside it from a desktop feature branch.

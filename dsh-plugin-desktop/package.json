@@ -151,6 +151,7 @@
     "dist:mac-smoke": "node scripts/package-mac.ts",
     "dist:win": "node scripts/package-win.ts",
     "dist:win-portable": "node scripts/package-win-portable.ts",
+    "dist:editions": "node scripts/package-editions.ts",
     "dist:linux": "node scripts/package-linux.ts",
     "prepack": "yarn run check",
     "verify:aa": "node ../scripts/prepare-agents-anywhere-runtime.mjs && DSH_VERIFY_AA=1 node scripts/verify-profile-boot.mjs",

@@ -37,6 +37,18 @@ corepack yarn dist:mac            # macOS
 corepack yarn dist:linux          # Linux AppImage / deb
 ```
 
+### Packaging both editions in one run
+
+`corepack yarn dist:win:editions` packages the **original** and the **Coexist** edition (Windows x64 NSIS installer plus portable archive) in one run. Its isolation guarantees:
+
+- Before each edition, its identity (the `package.json` packaging fields plus the identity selection in `src/product-identity.ts`) is applied to the tree, then `dist/` and `lib/` are **cleared** and the package is rebuilt, so no packaging round can reuse or pollute outputs from a previous one; the compiled output always carries the current round's identity.
+- After each round, an identity-aware verifier checks the artifact names and PE headers against the active identity, so stale artifacts left by the other edition cannot pass.
+- Artifacts are collected under `dsh-plugin-desktop/release/original/` and `release/coexist/` (each with a SHA-256 `artifacts.json` manifest) and never overwrite each other.
+- The two identity files are always restored byte-exact when the run ends, including on interruption.
+- The shared `.desktop-build/` runtime staging is not cleared: it is identity-independent, version-verified by the packaging pipeline, and skipping the clear avoids re-downloading interpreter payloads.
+
+Options: `--editions original,coexist` (selection and order) and `--targets nsis,zip` (artifact kinds). The command skips the in-tree package gate (`DSH_PACKAGE_CHECK_ALREADY_RAN=1`, because that gate asserts the committed Coexist identity); run `corepack yarn check` separately.
+
 Installing the Coexist edition does not affect an installed official edition: the different appId yields a different install directory, Start Menu/desktop shortcuts ("DSH Desktop Coexist"), and uninstall registry entry. The installer's app-running check matches only the `DSH Desktop Coexist.exe` process and never terminates official-edition processes.
 
 ## Launching and switching

@@ -37,6 +37,18 @@ corepack yarn dist:mac            # macOS
 corepack yarn dist:linux          # Linux AppImage / deb
 ```
 
+### 一键打包原版与共存版
+
+`corepack yarn dist:win:editions` 在同一次运行中依次打包**原版**与**共存版**（均为 Windows x64 的 NSIS 安装器与免安装压缩包）。它的隔离保证：
+
+- 每个版本打包前都会先把该版本的身份（`package.json` 打包配置 + `src/product-identity.ts` 的身份选择）写入源码树，然后**清空 `dist/` 与 `lib/`** 再重新编译打包，因此任何一次打包都不会复用、也不会污染之前打包留下的产物；编译输出中烙印的身份必然与本轮一致。
+- 每轮打包后由身份感知的校验器按当前身份核对产物名与 PE 头，上一版留下的同名不同身份的旧产物无法通过校验。
+- 打包产物按版本收集到 `dsh-plugin-desktop/release/original/` 与 `release/coexist/`（含 SHA-256 清单 `artifacts.json`），互不覆盖。
+- 运行结束（包括中断）后源码树的两个身份文件会按字节恢复原状。
+- 共享的 `.desktop-build/` 运行时暂存不会清空：它与身份无关、由打包管线校验版本，且避免重复下载解释器载荷。
+
+可用参数：`--editions original,coexist`（选择与顺序）、`--targets nsis,zip`（只打某类产物）。该命令会跳过树内打包门禁（`DSH_PACKAGE_CHECK_ALREADY_RAN=1`，因为门禁断言的是提交态的共存身份），请另行运行 `corepack yarn check`。
+
 安装共存版不会影响已安装的原版：不同 appId 意味着不同的安装目录、开始菜单/桌面快捷方式（"DSH Desktop Coexist"）与卸载注册表项；安装器的"应用正在运行"检查只匹配 `DSH Desktop Coexist.exe` 进程，不会结束原版进程。
 
 ## 启动与切换

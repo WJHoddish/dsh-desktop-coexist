@@ -763,6 +763,7 @@
     "dist:mac": "yarn market:prepare && yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace dsh-plugin-desktop dist:mac",
     "dist:mac-smoke": "yarn market:prepare && yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace dsh-plugin-desktop dist:mac-smoke",
     "dist:win": "yarn market:prepare && yarn aa:prepare-release && yarn aa:prepare-release --verify-release && yarn workspace dsh-community-market build && yarn workspace dsh-plugin-desktop dist:win",
+    "dist:win:editions": "yarn market:prepare && yarn aa:prepare-release && yarn aa:prepare-release --verify-release && yarn workspace dsh-community-market build && yarn workspace dsh-plugin-desktop dist:editions",
     "dist:linux": "yarn market:prepare && yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace dsh-plugin-desktop dist:linux",
     "dist:win-portable": "yarn market:prepare && yarn aa:prepare-release && yarn aa:prepare-release --verify-release && yarn workspace dsh-community-market build && yarn workspace dsh-plugin-desktop dist:win-portable",
     "upstream:version": "cd deepseek-harness && corepack pnpm --version",
