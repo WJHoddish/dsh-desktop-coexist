@@ -6514,6 +6514,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@electron/osx-sign@patch:@electron/osx-sign@npm%3A1.3.3#./patches/@electron__osx-sign@1.3.3.patch::locator=deepseek-harness-desktop%40workspace%3A.":
+  version: 1.3.3
+  resolution: "@electron/osx-sign@patch:@electron/osx-sign@npm%3A1.3.3#./patches/@electron__osx-sign@1.3.3.patch::version=1.3.3&hash=afd4a5&locator=deepseek-harness-desktop%40workspace%3A."
+  dependencies:
+    compare-version: "npm:^0.1.2"
+    debug: "npm:^4.3.4"
+    fs-extra: "npm:^10.0.0"
+    isbinaryfile: "npm:^4.0.8"
+    minimist: "npm:^1.2.6"
+    plist: "npm:^3.0.5"
+  bin:
+    electron-osx-flat: bin/electron-osx-flat.js
+    electron-osx-sign: bin/electron-osx-sign.js
+  checksum: 10c0/685570a970607621fa9f05b6d7cfa46d550317fdbc0ab4ea8f78e9a0ed4c5a011f6252ad338581b240a78467d39ba3cf268e8b05abb0b9f1a1188816b495333e
+  languageName: node
+  linkType: hard
+
 "@electron/rebuild@npm:^4.0.4":
   version: 4.2.0
   resolution: "@electron/rebuild@npm:4.2.0"
@@ -7029,23 +7046,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@koromix/koffi-darwin-arm64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-darwin-arm64@npm:3.1.5"
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
 "@koromix/koffi-darwin-x64@npm:3.1.1":
   version: 3.1.1
   resolution: "@koromix/koffi-darwin-x64@npm:3.1.1"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@koromix/koffi-darwin-x64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-darwin-x64@npm:3.1.5"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
@@ -7057,23 +7060,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@koromix/koffi-freebsd-arm64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-freebsd-arm64@npm:3.1.5"
-  conditions: os=freebsd & cpu=arm64
-  languageName: node
-  linkType: hard
-
 "@koromix/koffi-freebsd-ia32@npm:3.1.1":
   version: 3.1.1
   resolution: "@koromix/koffi-freebsd-ia32@npm:3.1.1"
-  conditions: os=freebsd & cpu=ia32
-  languageName: node
-  linkType: hard
-
-"@koromix/koffi-freebsd-ia32@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-freebsd-ia32@npm:3.1.5"
   conditions: os=freebsd & cpu=ia32
   languageName: node
   linkType: hard
@@ -7085,23 +7074,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@koromix/koffi-freebsd-x64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-freebsd-x64@npm:3.1.5"
-  conditions: os=freebsd & cpu=x64
-  languageName: node
-  linkType: hard
-
 "@koromix/koffi-linux-arm64@npm:3.1.1":
   version: 3.1.1
   resolution: "@koromix/koffi-linux-arm64@npm:3.1.1"
-  conditions: os=linux & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@koromix/koffi-linux-arm64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-linux-arm64@npm:3.1.5"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
@@ -7113,23 +7088,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@koromix/koffi-linux-ia32@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-linux-ia32@npm:3.1.5"
-  conditions: os=linux & cpu=ia32
-  languageName: node
-  linkType: hard
-
 "@koromix/koffi-linux-loong64@npm:3.1.1":
   version: 3.1.1
   resolution: "@koromix/koffi-linux-loong64@npm:3.1.1"
-  conditions: os=linux & cpu=loong64
-  languageName: node
-  linkType: hard
-
-"@koromix/koffi-linux-loong64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-linux-loong64@npm:3.1.5"
   conditions: os=linux & cpu=loong64
   languageName: node
   linkType: hard
@@ -7141,23 +7102,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@koromix/koffi-linux-riscv64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-linux-riscv64@npm:3.1.5"
-  conditions: os=linux & cpu=riscv64
-  languageName: node
-  linkType: hard
-
 "@koromix/koffi-linux-x64@npm:3.1.1":
   version: 3.1.1
   resolution: "@koromix/koffi-linux-x64@npm:3.1.1"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@koromix/koffi-linux-x64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-linux-x64@npm:3.1.5"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
@@ -7169,23 +7116,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@koromix/koffi-openbsd-ia32@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-openbsd-ia32@npm:3.1.5"
-  conditions: os=openbsd & cpu=ia32
-  languageName: node
-  linkType: hard
-
 "@koromix/koffi-openbsd-x64@npm:3.1.1":
   version: 3.1.1
   resolution: "@koromix/koffi-openbsd-x64@npm:3.1.1"
-  conditions: os=openbsd & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@koromix/koffi-openbsd-x64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-openbsd-x64@npm:3.1.5"
   conditions: os=openbsd & cpu=x64
   languageName: node
   linkType: hard
@@ -7197,13 +7130,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@koromix/koffi-win32-arm64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-win32-arm64@npm:3.1.5"
-  conditions: os=win32 & cpu=arm64
-  languageName: node
-  linkType: hard
-
 "@koromix/koffi-win32-ia32@npm:3.1.1":
   version: 3.1.1
   resolution: "@koromix/koffi-win32-ia32@npm:3.1.1"
@@ -7211,23 +7137,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@koromix/koffi-win32-ia32@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-win32-ia32@npm:3.1.5"
-  conditions: os=win32 & cpu=ia32
-  languageName: node
-  linkType: hard
-
 "@koromix/koffi-win32-x64@npm:3.1.1":
   version: 3.1.1
   resolution: "@koromix/koffi-win32-x64@npm:3.1.1"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@koromix/koffi-win32-x64@npm:3.1.5":
-  version: 3.1.5
-  resolution: "@koromix/koffi-win32-x64@npm:3.1.5"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -10967,7 +10879,7 @@ __metadata:
     micromark-util-symbol: "npm:^2.0.1"
     papaparse: "npm:^5.5.0"
     playwright: "npm:1.63.0"
-    pnpm: "npm:11.8.0"
+    pnpm: "npm:11.28.5"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
     selfsigned: "npm:5.5.0"
@@ -11195,13 +11107,13 @@ __metadata:
     fflate: "npm:0.8.2"
     fs-ext: "npm:2.1.1"
     jsdom: "npm:29.1.1"
-    koffi: "npm:3.1.5"
+    koffi: "npm:3.1.1"
     lexical: "npm:0.49.0"
     lucide-react: "npm:^1.33.0"
     node-addon-require-builtin: "npm:^0.1.9"
     node-gyp: "npm:13.0.1"
     papaparse: "npm:^5.5.0"
-    pnpm: "npm:11.8.0"
+    pnpm: "npm:11.28.5"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
     selfsigned: "npm:5.5.0"
@@ -11433,13 +11345,13 @@ __metadata:
     fflate: "npm:0.8.2"
     fs-ext: "npm:2.1.1"
     jsdom: "npm:29.1.1"
-    koffi: "npm:3.1.5"
+    koffi: "npm:3.1.1"
     lexical: "npm:0.49.0"
     lucide-react: "npm:^1.33.0"
     node-addon-require-builtin: "npm:^0.1.9"
     node-gyp: "npm:13.0.1"
     papaparse: "npm:^5.5.0"
-    pnpm: "npm:11.8.0"
+    pnpm: "npm:11.28.5"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
     selfsigned: "npm:5.5.0"
@@ -13380,60 +13292,6 @@ __metadata:
     "@koromix/koffi-win32-x64":
       optional: true
   checksum: 10c0/09175453065b0ed454267e055fc212e87271e3085ab8d312ade3555182d083c84285a07f3f5cbc2af797e70b510e921844cc875f57dcbd442b36cfc747a90d76
-  languageName: node
-  linkType: hard
-
-"koffi@npm:3.1.5":
-  version: 3.1.5
-  resolution: "koffi@npm:3.1.5"
-  dependencies:
-    "@koromix/koffi-darwin-arm64": "npm:3.1.5"
-    "@koromix/koffi-darwin-x64": "npm:3.1.5"
-    "@koromix/koffi-freebsd-arm64": "npm:3.1.5"
-    "@koromix/koffi-freebsd-ia32": "npm:3.1.5"
-    "@koromix/koffi-freebsd-x64": "npm:3.1.5"
-    "@koromix/koffi-linux-arm64": "npm:3.1.5"
-    "@koromix/koffi-linux-ia32": "npm:3.1.5"
-    "@koromix/koffi-linux-loong64": "npm:3.1.5"
-    "@koromix/koffi-linux-riscv64": "npm:3.1.5"
-    "@koromix/koffi-linux-x64": "npm:3.1.5"
-    "@koromix/koffi-openbsd-ia32": "npm:3.1.5"
-    "@koromix/koffi-openbsd-x64": "npm:3.1.5"
-    "@koromix/koffi-win32-arm64": "npm:3.1.5"
-    "@koromix/koffi-win32-ia32": "npm:3.1.5"
-    "@koromix/koffi-win32-x64": "npm:3.1.5"
-  dependenciesMeta:
-    "@koromix/koffi-darwin-arm64":
-      optional: true
-    "@koromix/koffi-darwin-x64":
-      optional: true
-    "@koromix/koffi-freebsd-arm64":
-      optional: true
-    "@koromix/koffi-freebsd-ia32":
-      optional: true
-    "@koromix/koffi-freebsd-x64":
-      optional: true
-    "@koromix/koffi-linux-arm64":
-      optional: true
-    "@koromix/koffi-linux-ia32":
-      optional: true
-    "@koromix/koffi-linux-loong64":
-      optional: true
-    "@koromix/koffi-linux-riscv64":
-      optional: true
-    "@koromix/koffi-linux-x64":
-      optional: true
-    "@koromix/koffi-openbsd-ia32":
-      optional: true
-    "@koromix/koffi-openbsd-x64":
-      optional: true
-    "@koromix/koffi-win32-arm64":
-      optional: true
-    "@koromix/koffi-win32-ia32":
-      optional: true
-    "@koromix/koffi-win32-x64":
-      optional: true
-  checksum: 10c0/2941703da4b733c6aa92696dd41780194682389058a3ad4a6fed5634959a245dd8ecb3faa257804e965ca2ca6abc1523b784536d40f073c41c5950bc5118fc78
   languageName: node
   linkType: hard
 
@@ -15618,9 +15476,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pnpm@npm:11.8.0":
-  version: 11.8.0
-  resolution: "pnpm@npm:11.8.0"
+"pnpm@npm:11.28.5":
+  version: 11.28.5
+  resolution: "pnpm@npm:11.28.5"
   dependencies:
     node-gyp: "npm:latest"
   bin:
@@ -15628,13 +15486,13 @@ __metadata:
     pnpm: bin/pnpm.mjs
     pnpx: bin/pnpx.mjs
     pnx: bin/pnpx.mjs
-  checksum: 10c0/a24262bc503a6007a1948c2182377b30d22e8e192cb2b85e8dd7e2bbac0e87ed1426f454a73ed95943f36177d54938a02d5d6cbbadf01f58467c8c2d06d1a35d
+  checksum: 10c0/b21f4ee96b9ec89b78c952db0ffbd97bcda3c0d3e52bc068a6ef109e84da4ccc010c7525239870cc31aaf175eb4938a4c26c91f7bbfd7e003bdd5ab490810bfc
   languageName: node
   linkType: hard
 
-"pnpm@patch:pnpm@npm%3A11.8.0#./patches/pnpm@11.8.0.patch::locator=deepseek-harness-desktop%40workspace%3A.":
-  version: 11.8.0
-  resolution: "pnpm@patch:pnpm@npm%3A11.8.0#./patches/pnpm@11.8.0.patch::version=11.8.0&hash=13eaf9&locator=deepseek-harness-desktop%40workspace%3A."
+"pnpm@patch:pnpm@npm%3A11.28.5#./patches/pnpm@11.28.5.patch::locator=deepseek-harness-desktop%40workspace%3A.":
+  version: 11.28.5
+  resolution: "pnpm@patch:pnpm@npm%3A11.28.5#./patches/pnpm@11.28.5.patch::version=11.28.5&hash=b421f8&locator=deepseek-harness-desktop%40workspace%3A."
   dependencies:
     node-gyp: "npm:latest"
   bin:
@@ -15642,7 +15500,7 @@ __metadata:
     pnpm: bin/pnpm.mjs
     pnpx: bin/pnpx.mjs
     pnx: bin/pnpx.mjs
-  checksum: 10c0/b1015c7aa081daf65d4ad34f3baddd80fca6a97ac0e23d5733f84dc648cde34092294651855b860d98bbf77713ddb75e78bf7869b46e29bcb5964d2df8ebcece
+  checksum: 10c0/b38a5067c810afd779d91735c38b51c5576ad07f772417a031b51167cce80f0ea9677be426970ab74fb4741670afa266f43b0db32889fd2efae49475058a3114
   languageName: node
   linkType: hard
 
