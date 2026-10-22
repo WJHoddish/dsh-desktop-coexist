@@ -2,7 +2,7 @@
   "name": "dsh-plugin-desktop",
   "version": "2.0.18",
   "description": "DSH Desktop: an Electron shell composed as a DeepSeek Harness Cordis plugin",
-  "desktopName": "dsh-desktop.desktop",
+  "desktopName": "dsh-desktop-coexist.desktop",
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -392,8 +392,8 @@
     "vitest": "4.1.8"
   },
   "build": {
-    "appId": "ai.deepseek.dsh.desktop",
-    "productName": "DSH Desktop",
+    "appId": "ai.deepseek.dsh.desktop.coexist",
+    "productName": "DSH Desktop Coexist",
     "asar": false,
     "afterPack": "./scripts/verify-packaged-runtime.ts",
     "afterAllArtifactBuild": "./scripts/verify-electron-fuses.ts",
@@ -430,7 +430,7 @@
       "extendInfo": {
         "CFBundleAllowMixedLocalizations": true,
         "CFBundleDevelopmentRegion": "en",
-        "NSMicrophoneUsageDescription": "DSH Desktop uses the microphone for voice input.",
+        "NSMicrophoneUsageDescription": "DSH Desktop Coexist uses the microphone for voice input.",
         "CFBundleLocalizations": [
           "en",
           "zh_CN"
@@ -472,7 +472,7 @@
           ]
         }
       ],
-      "artifactName": "DSH-Desktop-${version}-${arch}-Portable.${ext}",
+      "artifactName": "DSH-Desktop-Coexist-${version}-${arch}-Portable.${ext}",
       "icon": "build/app-icon.ico"
     },
     "nsis": {
@@ -486,10 +486,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "differentialPackage": false,
-      "shortcutName": "DSH Desktop",
+      "shortcutName": "DSH Desktop Coexist",
       "uninstallerIcon": "build/app-icon.ico",
       "useZip": false,
-      "artifactName": "DSH-Desktop-${version}-${arch}-Setup.${ext}"
+      "artifactName": "DSH-Desktop-Coexist-${version}-${arch}-Setup.${ext}"
     },
     "linux": {
       "target": [
@@ -507,16 +507,16 @@
         }
       ],
       "icon": "build/icons",
-      "artifactName": "DSH-Desktop-${version}-${arch}.${ext}",
+      "artifactName": "DSH-Desktop-Coexist-${version}-${arch}.${ext}",
       "category": "Development",
-      "synopsis": "Agentic coding desktop for the DeepSeek Harness",
+      "synopsis": "Agentic coding desktop for the DeepSeek Harness (Coexist edition)",
       "maintainer": "DeepSeek <dsh-desktop@deepseek.com>",
-      "executableName": "dsh-desktop",
+      "executableName": "dsh-desktop-coexist",
       "syncDesktopName": true,
       "asar": false
     },
     "deb": {
-      "packageName": "dsh-desktop",
+      "packageName": "dsh-desktop-coexist",
       "packageCategory": "devel",
       "priority": "optional"
     },

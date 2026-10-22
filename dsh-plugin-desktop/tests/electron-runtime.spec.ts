@@ -2616,14 +2616,13 @@ describe('Electron desktop runtime', () => {
     expect(restart).toHaveBeenLastCalledWith('safe-mode')
   })
 
-  it('offers the transition notice during local development and explains a Next installer correctly', async () => {
+  it('skips the transition notice on the Coexist edition and explains a Next installer correctly', async () => {
     const { ElectronDesktopRuntime } = await import('../src/electron-runtime.ts')
-    const { DESKTOP_RELEASE_CHANNEL } = await import('../src/product-identity.ts')
     electron.app.isPackaged = false
     const runtime = new ElectronDesktopRuntime(async () => {})
     const release = runtime.schedule(spec)
     await runtime.mountScheduled()
-    expect(transitionNotice.open).toHaveBeenCalledWith('en', DESKTOP_RELEASE_CHANNEL, expect.any(Function))
+    expect(transitionNotice.open).not.toHaveBeenCalled()
     await runtime.updates.confirmDownload('2.0.20-next', 'stable')
     expect(electron.dialog.showMessageBox).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({
       detail: expect.stringContaining('DSH NEXT'),
@@ -2651,7 +2650,8 @@ describe('Electron desktop runtime', () => {
       statePath: join('/tmp/dsh-desktop-user-data', 'updates', 'state.json'),
     })
     electron.app.isPackaged = true
-    expect(runtime.updates).toMatchObject({ isPackaged: true, canDownload: true })
+    // The Coexist edition never downloads from the official feed, even packaged.
+    expect(runtime.updates).toMatchObject({ isPackaged: true, canDownload: false })
 
     await runtime.updates.showManualCheckResult({
       status: 'up-to-date',

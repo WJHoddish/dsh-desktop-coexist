@@ -839,8 +839,8 @@ describe('published package surface', () => {
   it('fixes the installed application identity', () => {
     expect(workspaceManifest.version).toBeUndefined()
     expect(manifest.version).toBe('2.0.18')
-    expect(manifest.build?.productName).toBe('DSH Desktop')
-    expect(manifest.build?.appId).toBe('ai.deepseek.dsh.desktop')
+    expect(manifest.build?.productName).toBe('DSH Desktop Coexist')
+    expect(manifest.build?.appId).toBe('ai.deepseek.dsh.desktop.coexist')
     expect(manifest.build?.asar).toBe(false)
     expect(manifest.build).not.toHaveProperty('asarUnpack')
     for (const platform of ['mac', 'win', 'linux'] as const) {
@@ -883,7 +883,7 @@ describe('published package surface', () => {
       target: 'nsis',
       arch: ['x64'],
     }])
-    expect(manifest.build?.win?.artifactName).toBe('DSH-Desktop-${version}-${arch}-Portable.${ext}')
+    expect(manifest.build?.win?.artifactName).toBe('DSH-Desktop-Coexist-${version}-${arch}-Portable.${ext}')
     expect(manifest.build?.nsis).toEqual({
       include: 'installer.nsh',
       installerIcon: 'build/app-icon.ico',
@@ -895,22 +895,22 @@ describe('published package surface', () => {
       createDesktopShortcut: true,
       createStartMenuShortcut: true,
       differentialPackage: false,
-      shortcutName: 'DSH Desktop',
+      shortcutName: 'DSH Desktop Coexist',
       uninstallerIcon: 'build/app-icon.ico',
       useZip: false,
-      artifactName: 'DSH-Desktop-${version}-${arch}-Setup.${ext}',
+      artifactName: 'DSH-Desktop-Coexist-${version}-${arch}-Setup.${ext}',
     })
     expect(manifest.build?.linux?.icon).toBe('build/icons')
-    expect(manifest.build?.linux?.synopsis).toBe('Agentic coding desktop for the DeepSeek Harness')
+    expect(manifest.build?.linux?.synopsis).toBe('Agentic coding desktop for the DeepSeek Harness (Coexist edition)')
     // Electron derives the window's WM_CLASS from the root desktopName, and
     // syncDesktopName names the installed entry after it. Without the pair,
     // WM_CLASS falls back to the npm package name while the entry advertises
     // productName, nothing binds the running window to the installed entry,
     // and the dock, taskbar, and alt-tab ring all lose their icon.
-    expect(manifest.desktopName).toBe('dsh-desktop.desktop')
+    expect(manifest.desktopName).toBe('dsh-desktop-coexist.desktop')
     expect(manifest.build?.linux?.syncDesktopName).toBe(true)
     expect(manifest.build?.deb).toEqual({
-      packageName: 'dsh-desktop',
+      packageName: 'dsh-desktop-coexist',
       packageCategory: 'devel',
       priority: 'optional',
     })
@@ -978,7 +978,7 @@ describe('published package surface', () => {
       extendInfo: {
         CFBundleAllowMixedLocalizations: true,
         CFBundleDevelopmentRegion: 'en',
-        NSMicrophoneUsageDescription: 'DSH Desktop uses the microphone for voice input.',
+        NSMicrophoneUsageDescription: 'DSH Desktop Coexist uses the microphone for voice input.',
         CFBundleLocalizations: ['en', 'zh_CN'],
       },
       hardenedRuntime: true,

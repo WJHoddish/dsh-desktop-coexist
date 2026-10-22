@@ -10,6 +10,9 @@
  * Existing installations are never moved implicitly: when this channel's own
  * home does not exist yet and the shared home is already a usable DSH home,
  * the shared home stays in use and the caller reports the overlap instead.
+ * Only an identity that historically owned the shared home may adopt it; the
+ * Coexist edition always starts on its own home so an installed official
+ * DSH Desktop is never touched.
  */
 
 import { homedir } from 'node:os'
@@ -82,7 +85,7 @@ export function resolveDesktopChannelHome(
     return Object.freeze({ homeDir: channelHome, channelHome, legacyHome, status: 'channel' })
   }
   // Keep an installed channel where its data already lives.
-  if (!homeInUse(channelHome) && homeInUse(legacyHome)) {
+  if (identity.adoptsLegacySharedHome && !homeInUse(channelHome) && homeInUse(legacyHome)) {
     return Object.freeze({ homeDir: legacyHome, channelHome, legacyHome, status: 'legacy-shared' })
   }
   return Object.freeze({ homeDir: channelHome, channelHome, legacyHome, status: 'channel' })

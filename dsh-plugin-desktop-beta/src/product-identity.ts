@@ -6,6 +6,12 @@ export const DESKTOP_RELEASE_IDENTITIES = Object.freeze({
     productName: 'DSH Desktop',
     appId: 'ai.deepseek.dsh.desktop',
     homeDirectoryName: '.dsh',
+    /** Historically shared `~/.dsh` with the other official edition. */
+    adoptsLegacySharedHome: true,
+    /** Serves in-app updates from the official DSH Desktop release feed. */
+    usesOfficialUpdateFeed: true,
+    /** Announces the Stable-to-Next transition on this channel. */
+    announcesNextTransition: true,
   }),
   beta: Object.freeze({
     releaseChannel: 'beta' as const,
@@ -13,6 +19,12 @@ export const DESKTOP_RELEASE_IDENTITIES = Object.freeze({
     productName: 'DSH Desktop Beta',
     appId: 'ai.deepseek.dsh.desktop.beta',
     homeDirectoryName: '.dsh-beta',
+    /** Historically shared `~/.dsh` with the other official edition. */
+    adoptsLegacySharedHome: true,
+    /** Serves in-app updates from the official DSH Desktop release feed. */
+    usesOfficialUpdateFeed: true,
+    /** Announces the Stable-to-Next transition on this channel. */
+    announcesNextTransition: true,
   }),
 })
 

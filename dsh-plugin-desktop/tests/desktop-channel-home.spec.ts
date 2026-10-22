@@ -9,9 +9,11 @@ import { DESKTOP_RELEASE_IDENTITIES } from '../src/product-identity.ts'
 
 const stable = DESKTOP_RELEASE_IDENTITIES.stable
 const beta = DESKTOP_RELEASE_IDENTITIES.beta
+const coexist = DESKTOP_RELEASE_IDENTITIES.coexist
 const userHome = process.platform === 'win32' ? 'C:\Users\tester' : '/home/tester'
 const legacy = resolve(join(userHome, '.dsh'))
 const betaHome = resolve(join(userHome, '.dsh-beta'))
+const coexistHome = resolve(join(userHome, '.dsh-coexist'))
 const inUse = (...paths: string[]) => (path: string) => paths.includes(path)
 const none = () => false
 
@@ -19,6 +21,7 @@ describe('desktopChannelHome', () => {
   it('gives each release channel a distinct home', () => {
     expect(desktopChannelHome(stable, userHome)).toBe(legacy)
     expect(desktopChannelHome(beta, userHome)).toBe(betaHome)
+    expect(desktopChannelHome(coexist, userHome)).toBe(coexistHome)
   })
 })
 
@@ -92,6 +95,31 @@ describe('resolveDesktopChannelHome', () => {
       homeInUse: inUse(legacy),
     })
     expect(resolution.status).toBe('legacy-shared')
+  })
+
+  it('never sends the Coexist edition onto the official editions\' shared home', () => {
+    const resolution = resolveDesktopChannelHome({
+      identity: coexist,
+      environment: {},
+      homeDirectory: userHome,
+      homeInUse: inUse(legacy),
+    })
+    expect(resolution.homeDir).toBe(coexistHome)
+    expect(resolution.channelHome).toBe(coexistHome)
+    expect(resolution.status).toBe('channel')
+    expect(desktopSharedHomeNoticeRequired(resolution, 'default')).toBe(false)
+  })
+
+  it('still honors an explicit DSH_HOME on the Coexist edition', () => {
+    const configured = resolve(join(userHome, 'elsewhere'))
+    const resolution = resolveDesktopChannelHome({
+      identity: coexist,
+      environment: { DSH_HOME: configured },
+      homeDirectory: userHome,
+      homeInUse: inUse(legacy),
+    })
+    expect(resolution.homeDir).toBe(configured)
+    expect(resolution.status).toBe('explicit')
   })
 })
 

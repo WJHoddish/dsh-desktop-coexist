@@ -222,12 +222,15 @@ describe('desktop update Host plugin', () => {
 
   it('exposes the packaged 60-second and six-hour background policy', () => {
     expect(inject).toEqual(['desktopRuntime', 'webServer', 'connection'])
+    // The Coexist edition has no official update feed, so background polling
+    // stays off unless a profile explicitly opts in.
     expect(Config({} as UpdateConfig)).toEqual({
-      enabled: true,
+      enabled: false,
       initialDelayMs: 60_000,
       intervalMs: 21_600_000,
       requestTimeoutMs: 15_000,
     })
+    expect(Config({ enabled: true } as UpdateConfig).enabled).toBe(true)
     expect(() => Config({ intervalMs: 0 } as UpdateConfig)).toThrow()
     expect(() => Config({ requestTimeoutMs: 0 } as UpdateConfig)).toThrow()
   })

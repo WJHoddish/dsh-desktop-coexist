@@ -65,7 +65,7 @@ import {
 } from './update-download.ts'
 import { parseCanonicalChannelVersion, type UpdateCheckResult } from './update-checker.ts'
 import type { DesktopInstallationId } from './desktop-installation-id.ts'
-import { DESKTOP_RELEASE_CHANNEL } from './product-identity.ts'
+import { DESKTOP_PRODUCT_IDENTITY, DESKTOP_RELEASE_CHANNEL } from './product-identity.ts'
 import type { DesktopReleaseChannel } from './update-checker.ts'
 import {
   type WindowsVolumeQuery,
@@ -235,7 +235,12 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
     })
     this.updates = {
       get isPackaged() { return app.isPackaged },
-      get canDownload() { return app.isPackaged && platformStrategy.updateDownloadPlatform !== undefined },
+      // The official feed only ships official installers; an edition without
+      // that feed must never download and run one beside itself.
+      get canDownload() {
+        return DESKTOP_PRODUCT_IDENTITY.usesOfficialUpdateFeed
+          && app.isPackaged && platformStrategy.updateDownloadPlatform !== undefined
+      },
       get currentVersion() { return PRODUCT_VERSION },
       get releaseChannel() { return DESKTOP_RELEASE_CHANNEL },
       get statePath() { return join(app.getPath('userData'), 'updates', 'state.json') },
@@ -381,10 +386,14 @@ export class ElectronDesktopRuntime implements DesktopRuntime {
       this.generation = generation
       this.mountTask = generation.mount(beforeInteractive).then(() => {
         this.rendererHealthGate?.acceptNativeMount()
-        void this.nextTransitionNotice.open(this.locale, DESKTOP_RELEASE_CHANNEL,
-          () => this.generation === generation && !this.quitting).then(() => this.offerUpdateArtifactCleanup()).catch((cause: unknown) => {
-          this.logError(`dsh-plugin-desktop: failed to resolve update installer cleanup: ${cause instanceof Error ? cause.message : String(cause)}`)
-        })
+        void (DESKTOP_PRODUCT_IDENTITY.announcesNextTransition
+          ? this.nextTransitionNotice.open(this.locale, DESKTOP_RELEASE_CHANNEL,
+              () => this.generation === generation && !this.quitting)
+          : Promise.resolve())
+          .then(() => this.offerUpdateArtifactCleanup())
+          .catch((cause: unknown) => {
+            this.logError(`dsh-plugin-desktop: failed to resolve update installer cleanup: ${cause instanceof Error ? cause.message : String(cause)}`)
+          })
       }).catch((cause: unknown) => {
         if (this.generation === generation) this.generation = undefined
         throw cause

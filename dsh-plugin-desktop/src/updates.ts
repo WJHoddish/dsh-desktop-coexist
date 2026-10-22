@@ -6,6 +6,7 @@ import type {} from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import { DESKTOP_UPDATE_CHECK_PATH } from './desktop-settings-contract.ts'
 import { handleDesktopUpdateCheckRequest } from './desktop-settings-route.ts'
+import { DESKTOP_PRODUCT_IDENTITY } from './product-identity.ts'
 import type {} from './runtime.ts'
 import { startDesktopUpdateLifecycle } from './update-lifecycle.ts'
 
@@ -31,7 +32,9 @@ export interface Config {
 
 /** Validated scheduled update policy. */
 export const Config: z<Config> = z.object({
-  enabled: z.boolean().default(true),
+  // An edition without the official update feed never polls it in the
+  // background; upgrades arrive through that edition's own installer.
+  enabled: z.boolean().default(DESKTOP_PRODUCT_IDENTITY.usesOfficialUpdateFeed),
   initialDelayMs: z.number().step(1).min(0).max(MAX_TIMER_DELAY_MS).default(60_000),
   intervalMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(6 * 60 * 60 * 1000),
   requestTimeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(15_000),
