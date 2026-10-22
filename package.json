@@ -15,7 +15,7 @@
     "dsh-community-market"
   ],
   "resolutions": {
-    "@agents-anywhere/dsh-bridge-next": "patch:@agents-anywhere/dsh-bridge-next@file%3Avendor/agents-anywhere/agents-anywhere-dsh-bridge-next-2.1.0-desktop.c39b82d4fffb1.r2e406d2a.tgz#./patches/agents-anywhere-connector-httpx.patch",
+    "@agents-anywhere/dsh-bridge-next": "file:vendor/agents-anywhere/agents-anywhere-dsh-bridge-next-2.1.0-desktop.c6fb6b165d490.r2e406d2a.tgz",
     "app-builder-lib@npm:26.15.7": "patch:app-builder-lib@npm%3A26.15.7#./patches/app-builder-lib@26.15.7.patch",
     "open@npm:11.0.1": "patch:open@npm%3A11.0.1#./patches/open@11.0.1.patch",
     "open@npm:^11.0.0": "patch:open@npm%3A11.0.1#./patches/open@11.0.1.patch",
@@ -756,7 +756,7 @@
     "check:vendored-runtime": "node scripts/sync-vendored-runtime.mjs --check --channel stable && node scripts/sync-vendored-runtime.mjs --check --channel beta",
     "check:desktop-variants": "node scripts/verify-desktop-variants.mjs",
     "check:layout": "node scripts/run-parallel.mjs \"node --test scripts/prepare-dsh-market.test.mjs scripts/agents-anywhere-release-policy.test.mjs scripts/bilingual-docs.test.mjs scripts/market-dependency-direction.test.mjs scripts/inspector-compat.test.mjs scripts/export-app-icons.test.mjs\" \"node scripts/verify-bilingual-docs.mjs\" \"node scripts/verify-market-dependency-direction.mjs\" \"node scripts/sync-vendored-runtime.mjs --check --channel stable\" \"node scripts/sync-vendored-runtime.mjs --check --channel beta\" \"node scripts/verify-desktop-variants.mjs\" \"node scripts/export-app-icons.mjs --check\" \"node scripts/verify-layout.mjs\"",
-    "check": "node scripts/run-parallel.mjs \"yarn check:layout\" \"yarn test:aa-connector\" \"yarn workspace dsh-community-fabric check\" \"yarn workspace dsh-community-market check\" && node scripts/run-parallel.mjs \"yarn workspace dsh-plugin-desktop check\" \"yarn workspace dsh-plugin-desktop-beta check\" \"yarn workspace dsh-desktop-next check\"",
+    "check": "node scripts/run-parallel.mjs \"yarn check:layout\" \"yarn workspace dsh-community-fabric check\" \"yarn workspace dsh-community-market check\" && node scripts/run-parallel.mjs \"yarn workspace dsh-plugin-desktop check\" \"yarn workspace dsh-plugin-desktop-beta check\" \"yarn workspace dsh-desktop-next check\"",
     "dev": "yarn market:prepare && yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace dsh-plugin-desktop dev",
     "start": "yarn market:prepare && yarn workspace dsh-plugin-desktop start",
     "package:dir": "yarn market:prepare && yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace dsh-plugin-desktop package:dir",
@@ -781,7 +781,6 @@
     "dist:win-portable:beta": "yarn market:prepare && yarn aa:prepare-release && yarn aa:prepare-release --verify-release && yarn workspace dsh-community-market build && yarn workspace dsh-plugin-desktop-beta dist:win-portable",
     "aa:check": "node scripts/prepare-agents-anywhere-release.mjs --check",
     "aa:prepare-release": "node scripts/prepare-agents-anywhere-release.mjs",
-    "test:aa-connector": "node --test scripts/agents-anywhere-connector.test.mjs",
     "test:aa-release": "node --test scripts/agents-anywhere-release-policy.test.mjs",
     "dev:next": "yarn market:prepare && yarn aa:prepare-release && yarn workspace dsh-community-market build && yarn workspace dsh-desktop-next dev",
     "start:next": "yarn market:prepare && yarn workspace dsh-desktop-next start",

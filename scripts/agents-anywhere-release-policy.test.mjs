@@ -62,10 +62,10 @@ test('rejects a version identifying a different commit even when provenance matc
   assert.throws(() => assertPreparedAaRelease(root, commit), /artifact version does not identify the selected commit/)
 })
 
-test('rejects a compatibility patch pinned to a previous AA artifact', t => {
+test('rejects a root resolution pinned to a previous AA artifact', t => {
   const { root, patch } = fixture(t)
   patch('package.json', data => { data.resolutions[AA_PACKAGE] = aaConnectorResolution('old.tgz') })
-  assert.throws(() => assertPreparedAaRelease(root, commit), /compatibility patch references a different AA artifact/)
+  assert.throws(() => assertPreparedAaRelease(root, commit), /Root resolution references a different AA artifact/)
 })
 
 for (const [schemaVersion, cosmokitVersion] of [['3.18.2', '1.8.3'], ['3.18.4', '1.8.5'], ['3.18.5', '1.8.6']]) {
