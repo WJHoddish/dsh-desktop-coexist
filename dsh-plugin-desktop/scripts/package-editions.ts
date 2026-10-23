@@ -25,7 +25,7 @@ import { dirname, join, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import { fileURLToPath } from 'node:url'
 import { createWindowsPackageOptions, packageWindowsArtifact } from './package-win.ts'
-import { prepareDesktopInterpreters } from './prepare-runtime.ts'
+import { prepareDesktopInterpreters, verifyPreparedDesktopRuntime } from './prepare-runtime.ts'
 
 /** Editions this script can package. */
 export type DesktopEdition = 'original' | 'coexist'
@@ -228,12 +228,37 @@ export function isTransientNsisOutputLock(output: string): boolean {
   return /Can't open output file/u.test(output)
 }
 
+/**
+ * The same scanner can hold a freshly staged runtime file unreadable for a
+ * moment, which the verifier reports as a missing payload. Report whether an
+ * error carries that shape.
+ */
+export function isTransientRuntimeReadLock(error: unknown): boolean {
+  return error instanceof Error && /^Desktop runtime: missing .+: .+$/u.test(error.message)
+}
+
+/** Re-check the staged runtime until either it reads or the transient lock clears. */
+async function awaitReadableRuntime(desktopRoot: string, log: (message: string) => void): Promise<void> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      verifyPreparedDesktopRuntime(desktopRoot)
+      return
+    } catch (error) {
+      if (!isTransientRuntimeReadLock(error) || attempt >= 3) throw error
+      log(`prepared runtime files are momentarily unreadable (typically antivirus scanning the fresh staging); re-checking (${attempt}/2)`)
+      await new Promise(resolve => setTimeout(resolve, 2_000 * attempt))
+    }
+  }
+}
+
 /** Run one packaging pass, retrying once when NSIS hit that transient lock. */
-function runEditionArtifactPass(
+async function runEditionArtifactPass(
   baseOptions: ReturnType<typeof createWindowsPackageOptions>,
+  desktopRoot: string,
   target: DesktopEditionWindowsTarget,
   log: (message: string) => void,
-): void {
+): Promise<void> {
+  await awaitReadableRuntime(desktopRoot, log)
   for (let attempt = 1; ; attempt += 1) {
     let captured = ''
     const run: typeof baseOptions.run = (command, args, cwd, env) => {
@@ -410,7 +435,7 @@ async function packageEditions(argv: readonly string[]): Promise<void> {
       if (build.error !== undefined) throw build.error
       if (build.status !== 0) throw new Error(`edition build exited with ${String(build.status)}`)
       for (const target of request.targets) {
-        runEditionArtifactPass(baseOptions, target, log)
+        await runEditionArtifactPass(baseOptions, desktopRoot, target, log)
       }
       await collectEditionArtifacts(
         desktopRoot,

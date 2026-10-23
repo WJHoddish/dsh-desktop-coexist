@@ -9,6 +9,7 @@ import {
   detectEditionIdentityKey,
   editionWindowsArtifacts,
   isTransientNsisOutputLock,
+  isTransientRuntimeReadLock,
   parseEditionsArguments,
   serializeDesktopManifest,
   withEditionIdentitySource,
@@ -151,6 +152,14 @@ describe('isTransientNsisOutputLock', () => {
     expect(isTransientNsisOutputLock('Output: "dist\\Setup.exe"\n\nError output:\nCan\'t open output file\nError - aborting creation process')).toBe(true)
     expect(isTransientNsisOutputLock('connect ETIMEDOUT 20.205.243.166:443')).toBe(false)
     expect(isTransientNsisOutputLock('')).toBe(false)
+  })
+})
+
+describe('isTransientRuntimeReadLock', () => {
+  it('recognizes the missing-payload read failure shape', () => {
+    expect(isTransientRuntimeReadLock(new Error('Desktop runtime: missing x64 payload manifest: C:\\r\\runtime\\x64\\primary-runtime\\runtime.json'))).toBe(true)
+    expect(isTransientRuntimeReadLock(new Error('Desktop runtime: x64 declares version 2.0.17, expected 2.0.18'))).toBe(false)
+    expect(isTransientRuntimeReadLock('Desktop runtime: missing x64 payload manifest: x')).toBe(false)
   })
 })
 
