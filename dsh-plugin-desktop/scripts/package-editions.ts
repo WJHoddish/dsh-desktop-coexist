@@ -19,7 +19,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { copyFileSync, createReadStream, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { closeSync, copyFileSync, createReadStream, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs'
 import type { Stats } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
@@ -392,6 +392,27 @@ function restoreIdentitySnapshot(snapshot: IdentitySnapshot, manifestPath: strin
   }
 }
 
+/**
+ * One run swaps the tree identity and clears `dist/`, so two concurrent runs
+ * would corrupt each other's editions. Refuse to start while a live run holds
+ * the lock under the identity-independent staging directory.
+ */
+function acquireEditionRunLock(desktopRoot: string): () => void {
+  mkdirSync(join(desktopRoot, '.desktop-build'), { recursive: true })
+  const lockPath = join(desktopRoot, '.desktop-build', 'editions.lock')
+  let descriptor: number
+  try {
+    descriptor = openSync(lockPath, 'wx')
+  } catch {
+    throw new Error(
+      `another edition packaging run appears to be active (${lockPath}); `
+        + 'let it finish, or delete the lock file if it was left behind by a crashed run',
+    )
+  }
+  writeSync(descriptor, `${process.pid} ${new Date().toISOString()}\n`)
+  return () => { closeSync(descriptor); rmSync(lockPath, { force: true }) }
+}
+
 /** Package the requested editions on a native Windows host, always restoring the tree. */
 async function packageEditions(argv: readonly string[]): Promise<void> {
   if (process.platform !== 'win32') {
@@ -402,6 +423,7 @@ async function packageEditions(argv: readonly string[]): Promise<void> {
   const workspaceRoot = resolve(desktopRoot, '..')
   const manifestPath = join(desktopRoot, 'package.json')
   const identityPath = join(desktopRoot, 'src', 'product-identity.ts')
+  const releaseLock = acquireEditionRunLock(desktopRoot)
   const snapshot = readIdentitySnapshot(manifestPath, identityPath)
   const committedKey = detectEditionIdentityKey(snapshot.identitySource.toString('utf8'))
   const log = (message: string): void => { console.log(`package-editions: ${message}`) }
@@ -416,6 +438,7 @@ async function packageEditions(argv: readonly string[]): Promise<void> {
     if (interrupted.value) return
     interrupted.value = true
     restoreIdentitySnapshot(snapshot, manifestPath, identityPath)
+    releaseLock()
     process.exit(130)
   }
   process.once('SIGINT', onSignal)
@@ -448,6 +471,7 @@ async function packageEditions(argv: readonly string[]): Promise<void> {
     }
   } finally {
     restoreIdentitySnapshot(snapshot, manifestPath, identityPath)
+    releaseLock()
     log('identity files restored to their pre-run state')
   }
 }
