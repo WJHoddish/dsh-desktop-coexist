@@ -1,3 +1,7 @@
+# 修改日志
+
+- 2026.10.23：共存版可以使用
+
 <p align="center">
   <a href="https://dshdesktop.cn"><img src="assets/desktop-hero-zh.png" alt="DSH Desktop：基于 DeepSeek Harness 构建的开源桌面客户端（jiaheng）" width="100%"></a>
 </p>
