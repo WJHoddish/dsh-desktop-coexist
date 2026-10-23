@@ -8,6 +8,7 @@ import {
   EDITION_PACKAGE_FIELDS,
   detectEditionIdentityKey,
   editionWindowsArtifacts,
+  isTransientNsisOutputLock,
   parseEditionsArguments,
   serializeDesktopManifest,
   withEditionIdentitySource,
@@ -145,8 +146,15 @@ describe('edition Windows artifact names', () => {
   })
 })
 
-describe('parseEditionsArguments', () => {
-  it('defaults to every edition and both Windows targets', () => {
+describe('isTransientNsisOutputLock', () => {
+  it('recognizes only the NSIS output-lock failure', () => {
+    expect(isTransientNsisOutputLock('Output: "dist\\Setup.exe"\n\nError output:\nCan\'t open output file\nError - aborting creation process')).toBe(true)
+    expect(isTransientNsisOutputLock('connect ETIMEDOUT 20.205.243.166:443')).toBe(false)
+    expect(isTransientNsisOutputLock('')).toBe(false)
+  })
+})
+
+describe('parseEditionsArguments', () => {  it('defaults to every edition and both Windows targets', () => {
     expect(parseEditionsArguments([])).toEqual({
       editions: DESKTOP_EDITIONS,
       targets: ['nsis', 'zip'],

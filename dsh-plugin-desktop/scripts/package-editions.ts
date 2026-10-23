@@ -218,6 +218,56 @@ function editionWindowsTargetKind(target: DesktopEditionWindowsTarget): 'install
   return target === 'nsis' ? 'installer' : 'portable'
 }
 
+/**
+ * NSIS builds in two passes: the uninstaller pass writes and executes a small
+ * installer, and realtime antivirus scanning of that fresh executable can hold
+ * the output file while the final pass reopens it. Report whether a packaging
+ * pass failed for exactly that transient lock.
+ */
+export function isTransientNsisOutputLock(output: string): boolean {
+  return /Can't open output file/u.test(output)
+}
+
+/** Run one packaging pass, retrying once when NSIS hit that transient lock. */
+function runEditionArtifactPass(
+  baseOptions: ReturnType<typeof createWindowsPackageOptions>,
+  target: DesktopEditionWindowsTarget,
+  log: (message: string) => void,
+): void {
+  for (let attempt = 1; ; attempt += 1) {
+    let captured = ''
+    const run: typeof baseOptions.run = (command, args, cwd, env) => {
+      const result = spawnSync(command, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'] })
+      const stdout = result.stdout === null ? '' : result.stdout.toString()
+      const stderr = result.stderr === null ? '' : result.stderr.toString()
+      captured = `${stdout}\n${stderr}`
+      if (stdout.length > 0) process.stdout.write(stdout)
+      if (stderr.length > 0) process.stderr.write(stderr)
+      if (result.error !== undefined) throw result.error
+      if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} exited with ${String(result.status)}`)
+    }
+    try {
+      packageWindowsArtifact(
+        {
+          ...baseOptions,
+          run,
+          env: {
+            ...process.env,
+            DSH_PACKAGE_CHECK_ALREADY_RAN: '1',
+            DSH_EDITION_VERIFY_TARGET: editionWindowsTargetKind(target),
+          },
+        },
+        target,
+        editionWindowsTargetKind(target) === 'installer' ? 'installer' : 'portable archive',
+      )
+      return
+    } catch (error) {
+      if (attempt >= 2 || !isTransientNsisOutputLock(captured)) throw error
+      log('NSIS could not reopen its output (typically an antivirus scan of the uninstaller pass); retrying the pass once')
+    }
+  }
+}
+
 /** Remove every artifact the previous packaging of any edition could leave behind. */
 function cleanEditionOutputs(desktopRoot: string, log: (message: string) => void): void {
   for (const relative of ['dist', 'lib']) {
@@ -360,18 +410,7 @@ async function packageEditions(argv: readonly string[]): Promise<void> {
       if (build.error !== undefined) throw build.error
       if (build.status !== 0) throw new Error(`edition build exited with ${String(build.status)}`)
       for (const target of request.targets) {
-        packageWindowsArtifact(
-          {
-            ...baseOptions,
-            env: {
-              ...process.env,
-              DSH_PACKAGE_CHECK_ALREADY_RAN: '1',
-              DSH_EDITION_VERIFY_TARGET: editionWindowsTargetKind(target),
-            },
-          },
-          target,
-          editionWindowsTargetKind(target) === 'installer' ? 'installer' : 'portable archive',
-        )
+        runEditionArtifactPass(baseOptions, target, log)
       }
       await collectEditionArtifacts(
         desktopRoot,

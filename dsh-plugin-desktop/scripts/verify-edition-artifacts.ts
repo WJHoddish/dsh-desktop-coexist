@@ -32,7 +32,9 @@ export function assertPortableExecutableHeader(path: string, label: string): voi
   if (!stat.isFile() || stat.size === 0) {
     throw new Error(`${label} is not a non-empty regular file: ${path}`)
   }
-  const buffer = Buffer.alloc(132)
+  // NSIS installer stubs point e_lfanew well past 0x80, so read the whole DOS
+  // header area instead of assuming the signature sits in the first 132 bytes.
+  const buffer = Buffer.alloc(4096)
   const descriptor = openSync(path, 'r')
   try {
     const bytesRead = readSync(descriptor, buffer, 0, buffer.byteLength, 0)
@@ -40,7 +42,7 @@ export function assertPortableExecutableHeader(path: string, label: string): voi
       throw new Error(`${label} does not have a Windows PE header: ${path}`)
     }
     const peOffset = buffer.readUInt32LE(0x3c)
-    if (peOffset <= 0 || peOffset + 4 > stat.size
+    if (peOffset <= 0 || peOffset + 4 > stat.size || peOffset + 4 > bytesRead
       || buffer.subarray(peOffset, peOffset + 4).toString('latin1') !== 'PE\0\0') {
       throw new Error(`${label} does not have a Windows PE signature: ${path}`)
     }
